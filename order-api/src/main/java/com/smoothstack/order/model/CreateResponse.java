@@ -12,7 +12,7 @@ import io.swagger.annotations.ApiModelProperty;
  */
 @ApiModel(description = "checkout session id")
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2021-06-30T22:53:09.076567700-06:00[America/Denver]")
-public class InlineResponse200   {
+public class CreateResponse {
   /**
    * Gets or Sets type
    */
@@ -54,7 +54,7 @@ public class InlineResponse200   {
   @JsonProperty("id")
   private String id;
 
-  public InlineResponse200 type(TypeEnum type) {
+  public CreateResponse type(TypeEnum type) {
     this.type = type;
     return this;
   }
@@ -74,7 +74,7 @@ public class InlineResponse200   {
     this.type = type;
   }
 
-  public InlineResponse200 id(String id) {
+  public CreateResponse id(String id) {
     this.id = id;
     return this;
   }
@@ -103,9 +103,9 @@ public class InlineResponse200   {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    InlineResponse200 inlineResponse200 = (InlineResponse200) o;
-    return Objects.equals(this.type, inlineResponse200.type) &&
-        Objects.equals(this.id, inlineResponse200.id);
+    CreateResponse createResponse = (CreateResponse) o;
+    return Objects.equals(this.type, createResponse.type) &&
+        Objects.equals(this.id, createResponse.id);
   }
 
   @Override

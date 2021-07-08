@@ -1,4 +1,4 @@
-package com.database.ormlibrary.order.repo;
+package com.smoothstack.order.repo;
 
 import com.database.ormlibrary.order.OrderEntity;
 import org.springframework.data.repository.CrudRepository;
