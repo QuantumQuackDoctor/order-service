@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 import com.smoothstack.order.model.InlineObject;
 import com.smoothstack.order.model.InlineObject1;
 import com.smoothstack.order.model.InlineObject2;
-import com.smoothstack.order.model.InlineResponse200;
+import com.smoothstack.order.model.CreateResponse;
 import java.util.List;
 import com.smoothstack.order.model.Order;
 import io.swagger.annotations.*;
@@ -41,12 +41,12 @@ public interface OrderApi {
      *         or Access token is missing or invalid (status code 401)
      *         or Forbidden (status code 403)
      */
-    @ApiOperation(value = "Create order", nickname = "createOrder", notes = "Create new order, sends back checkout session data. Payment intent will be canceled in 5 minutes if not paid. (Server note: use stripe webhooks to update payment status)", response = InlineResponse200.class, authorizations = {
+    @ApiOperation(value = "Create order", nickname = "createOrder", notes = "Create new order, sends back checkout session data. Payment intent will be canceled in 5 minutes if not paid. (Server note: use stripe webhooks to update payment status)", response = CreateResponse.class, authorizations = {
         
         @Authorization(value = "JWT")
          }, tags={ "order", })
     @ApiResponses(value = { 
-        @ApiResponse(code = 200, message = "OK", response = InlineResponse200.class),
+        @ApiResponse(code = 200, message = "OK", response = CreateResponse.class),
         @ApiResponse(code = 401, message = "Access token is missing or invalid", response = String.class),
         @ApiResponse(code = 403, message = "Forbidden") })
     @PutMapping(
@@ -54,7 +54,7 @@ public interface OrderApi {
         produces = { "application/json", "application/xml" },
         consumes = { "application/json", "application/xml" }
     )
-    default ResponseEntity<InlineResponse200> createOrder(@ApiParam(value = ""  )  @Valid @RequestBody(required = false) Order order) {
+    default ResponseEntity<CreateResponse> createOrder(@ApiParam(value = ""  )  @Valid @RequestBody(required = false) Order order) {
         getRequest().ifPresent(request -> {
             for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {

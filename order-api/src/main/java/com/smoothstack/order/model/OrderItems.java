@@ -15,6 +15,9 @@ public class OrderItems   {
   @JsonProperty("name")
   private String name;
 
+  @JsonProperty("id")
+  private String id;
+
   @JsonProperty("configurations")
   @Valid
   private List<String> configurations = null;
@@ -24,11 +27,22 @@ public class OrderItems   {
     return this;
   }
 
+
+  public String getId() {
+    return id;
+  }
+
+  public OrderItems setId(String id) {
+    this.id = id;
+    return this;
+  }
+
   /**
    * Get name
    * @return name
   */
   @ApiModelProperty(value = "")
+
 
 
   public String getName() {
