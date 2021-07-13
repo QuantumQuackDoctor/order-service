@@ -41,10 +41,10 @@ public interface OrderApi {
      *         or Access token is missing or invalid (status code 401)
      *         or Forbidden (status code 403)
      */
-    @ApiOperation(value = "Create order", nickname = "createOrder", notes = "Create new order, sends back checkout session data. Payment intent will be canceled in 5 minutes if not paid. (Server note: use stripe webhooks to update payment status)", response = CreateResponse.class, authorizations = {
-        
+    @ApiOperation(value = "Create order", nickname = "createOrder", notes = "Create new order, sends back checkout session data. Payment intent will be canceled in 5 minutes if not paid. (Server note: use stripe webhooks to update payment status)",
+            response = CreateResponse.class, /*authorizations = {
         @Authorization(value = "JWT")
-         }, tags={ "order", })
+         },*/ tags={ "order", })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = CreateResponse.class),
         @ApiResponse(code = 401, message = "Access token is missing or invalid", response = String.class),
@@ -54,7 +54,7 @@ public interface OrderApi {
         produces = { "application/json", "application/xml" },
         consumes = { "application/json", "application/xml" }
     )
-    default ResponseEntity<CreateResponse> createOrder(@ApiParam(value = ""  )  @Valid @RequestBody(required = false) Order order) {
+    default ResponseEntity<?> createOrder(@ApiParam(value = ""  )  @Valid @RequestBody(required = false) Order order) {
         getRequest().ifPresent(request -> {
             for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
