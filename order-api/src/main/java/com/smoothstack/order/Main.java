@@ -5,16 +5,16 @@ import org.openapitools.jackson.nullable.JsonNullableModule;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.ExitCodeGenerator;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-@Configuration
-@EnableAutoConfiguration
-@EnableJpaRepositories ("com.smoothstack.order.repo")
+/*@Configuration
+@EnableAutoConfiguration (exclude = SecurityAutoConfiguration.class)
+@EnableJpaRepositories ("com.smoothstack.order.repo")*/
+@SpringBootApplication (exclude = {SecurityAutoConfiguration.class})
 @EntityScan("com.database.ormlibrary")
 public class Main implements CommandLineRunner {
 
@@ -29,7 +29,7 @@ public class Main implements CommandLineRunner {
         }
     }
 
-    @Bean
+   @Bean
     public WebMvcConfigurer webConfigurer() {
         return new WebMvcConfigurer() {
             /*@Override
