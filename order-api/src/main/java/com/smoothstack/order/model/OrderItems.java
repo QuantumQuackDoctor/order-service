@@ -12,11 +12,12 @@ import javax.validation.Valid;
  */
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2021-06-30T22:53:09.076567700-06:00[America/Denver]")
 public class OrderItems   {
-  @JsonProperty("name")
-  private String name;
 
   @JsonProperty("id")
   private String id;
+
+  @JsonProperty("name")
+  private String name;
 
   @JsonProperty("configurations")
   @Valid

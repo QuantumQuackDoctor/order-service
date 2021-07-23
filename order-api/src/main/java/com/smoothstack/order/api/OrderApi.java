@@ -53,7 +53,7 @@ public interface OrderApi {
         produces = { "application/json", "application/xml" },
         consumes = { "application/json", "application/xml" }
     )
-    default ResponseEntity<?> createOrder(@ApiParam(value = ""  )  @Valid @RequestBody(required = false) OrderEntity order) {
+    default ResponseEntity<?> createOrder(@ApiParam(value = ""  )  @Valid @RequestBody(required = false) Order order) {
         getRequest().ifPresent(request -> {
             for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
@@ -226,7 +226,7 @@ public interface OrderApi {
         path = "/order",
         produces = { "application/json", "application/xml" }
     )
-    default ResponseEntity<List<OrderEntity>> getOrder(@ApiParam(value = "if true only returns pending orders") @Valid @RequestParam(value = "active", required = false) Boolean active) {
+    default ResponseEntity<List<Order>> getOrder(@ApiParam(value = "if true only returns pending orders") @Valid @RequestParam(value = "active", required = false) Boolean active) {
         getRequest().ifPresent(request -> {
             for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {

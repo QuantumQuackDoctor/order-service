@@ -44,21 +44,21 @@ public class OrderApiController implements OrderApi {
     }
 
     @Override
-    public ResponseEntity<List<OrderEntity>> getOrder(@ApiParam(value = "if true only returns pending orders") @Valid @RequestParam(value = "active", required = false) Boolean active){
+    public ResponseEntity<List<Order>> getOrder(@ApiParam(value = "if true only returns pending orders") @Valid @RequestParam(value = "active", required = false) Boolean active){
         return orderService.getOrder(true);
     }
 
     @Override
-    public ResponseEntity<?> createOrder(OrderEntity order) {
+    public ResponseEntity<?> createOrder(Order order) {
        if (!order.checkRequiredFields())
             return ResponseEntity.badRequest().body (new MissingFieldsException("Missing require fields"));
-       if (order.getItems().size() == 0)
+       if (order.getFood().size() == 0)
            return ResponseEntity.badRequest().body(new EmptyCartException("No items in cart."));
         return orderService.createOrder(order);
     }
 
     @PutMapping(path = "/order/sample")
     public ResponseEntity<?> addSampleOrder (){
-        return orderService.createSampleOrder();
+        return ResponseEntity.ok(orderService.createSampleOrder());
     }
 }

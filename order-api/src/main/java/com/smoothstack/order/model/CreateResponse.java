@@ -32,6 +32,7 @@ public class CreateResponse {
       return value;
     }
 
+
     @Override
     public String toString() {
       return String.valueOf(value);
@@ -53,6 +54,18 @@ public class CreateResponse {
 
   @JsonProperty("id")
   private String id;
+
+  @JsonProperty ("address")
+  private String address;
+
+  public String getAddress() {
+    return address;
+  }
+
+  public CreateResponse setAddress(String address) {
+    this.address = address;
+    return this;
+  }
 
   public CreateResponse type(TypeEnum type) {
     this.type = type;

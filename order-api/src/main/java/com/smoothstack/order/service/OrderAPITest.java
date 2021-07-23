@@ -5,57 +5,69 @@ import com.database.ormlibrary.order.FoodOrderEntity;
 import com.database.ormlibrary.order.OrderEntity;
 import com.database.ormlibrary.order.OrderTimeEntity;
 import com.database.ormlibrary.order.PriceEntity;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smoothstack.order.Main;
-import com.smoothstack.order.model.*;
-import com.smoothstack.order.repo.*;
-import error.OrderTimeException;
+import com.smoothstack.order.model.Order;
+import com.smoothstack.order.repo.DriverRepo;
+import com.smoothstack.order.repo.FoodOrderRepo;
+import com.smoothstack.order.repo.MenuItemRepo;
+import com.smoothstack.order.repo.OrderRepo;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest (classes = { Main.class })
-class OrderServiceTest {
+@AutoConfigureMockMvc
+
+public class OrderAPITest {
+
+    @MockBean (MenuItemRepo.class)
+    private MenuItemRepo menuItemRepo;
+
+    @MockBean (OrderRepo.class)
+    private OrderRepo orderRepo;
+
+    @MockBean (DriverRepo.class)
+    private DriverRepo driverRepo;
+
+    @MockBean
+    private FoodOrderRepo foodOrderRepo;
+
+    @Autowired
+    MockMvc mockMvc;
 
     @Autowired
     private OrderService orderService;
 
+     ObjectMapper objectMapper = new ObjectMapper();
+
     @Test
-    void createOrderTest(){
-        //inserts sample items in empty db
-
+    void apiTest () throws Exception {
         OrderEntity orderEntity = getSampleOrder();
-
-        orderService.insertSampleMenuItems();
-
         Order orderDTO = orderService.convertToDTO(orderEntity);
 
-        CreateResponse insertedResponse = (CreateResponse) orderService.createOrder(orderDTO).getBody();
+        mockMvc.perform(get("/order"))
+                .andExpect(status().isOk());
 
-        assertEquals (orderDTO.getAddress(), insertedResponse.getAddress());
-
-        OrderOrderTime newDeliveryTime = orderDTO.getOrderTime();
-
-        newDeliveryTime.setDeliverySlot("2011-12-03T10:25:30+01:00");
-
-        orderDTO.setOrderTime(newDeliveryTime);
-
-        assertEquals (orderService.createOrder(orderDTO).getBody().getClass(),
-                OrderTimeException.class);
-
+        mockMvc.perform(put("/order").content(objectMapper
+        .writeValueAsString(orderDTO)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
     }
 
     public OrderEntity getSampleOrder(){

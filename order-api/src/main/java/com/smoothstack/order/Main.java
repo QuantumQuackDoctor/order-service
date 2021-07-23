@@ -11,9 +11,6 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-/*@Configuration
-@EnableAutoConfiguration (exclude = SecurityAutoConfiguration.class)
-@EnableJpaRepositories ("com.smoothstack.order.repo")*/
 @SpringBootApplication (exclude = {SecurityAutoConfiguration.class})
 @EntityScan("com.database.ormlibrary")
 public class Main implements CommandLineRunner {
