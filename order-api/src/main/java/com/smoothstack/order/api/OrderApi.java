@@ -7,7 +7,6 @@ package com.smoothstack.order.api;
 
 import java.math.BigDecimal;
 
-import com.database.ormlibrary.order.OrderEntity;
 import com.smoothstack.order.model.InlineObject;
 import com.smoothstack.order.model.InlineObject1;
 import com.smoothstack.order.model.InlineObject2;

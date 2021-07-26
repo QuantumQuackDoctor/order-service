@@ -58,6 +58,7 @@ public class OrderAPITest {
      ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
+    @WithMockUser(roles = "user")
     void apiTest () throws Exception {
         OrderEntity orderEntity = getSampleOrder();
         Order orderDTO = orderService.convertToDTO(orderEntity);

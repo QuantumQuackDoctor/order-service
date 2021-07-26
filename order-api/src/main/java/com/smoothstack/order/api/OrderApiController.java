@@ -11,6 +11,7 @@ import error.EmptyCartException;
 import error.MissingFieldsException;
 import io.swagger.annotations.ApiParam;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -44,6 +45,7 @@ public class OrderApiController implements OrderApi {
     }
 
     @Override
+    @PreAuthorize("hasRole('ROLE_user')")
     public ResponseEntity<List<Order>> getOrder(@ApiParam(value = "if true only returns pending orders") @Valid @RequestParam(value = "active", required = false) Boolean active){
         return orderService.getOrder(true);
     }
