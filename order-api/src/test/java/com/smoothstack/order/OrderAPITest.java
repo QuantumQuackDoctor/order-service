@@ -1,4 +1,4 @@
-package com.smoothstack.order.service;
+package com.smoothstack.order;
 
 import com.database.ormlibrary.food.MenuItemEntity;
 import com.database.ormlibrary.order.FoodOrderEntity;
@@ -13,6 +13,7 @@ import com.smoothstack.order.repo.DriverRepo;
 import com.smoothstack.order.repo.FoodOrderRepo;
 import com.smoothstack.order.repo.MenuItemRepo;
 import com.smoothstack.order.repo.OrderRepo;
+import com.smoothstack.order.service.OrderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.modelmapper.ModelMapper;
@@ -20,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;

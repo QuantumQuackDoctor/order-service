@@ -1,4 +1,4 @@
-package com.smoothstack.order.service;
+package com.smoothstack.order;
 
 import com.database.ormlibrary.food.MenuItemEntity;
 import com.database.ormlibrary.order.FoodOrderEntity;
@@ -8,6 +8,7 @@ import com.database.ormlibrary.order.PriceEntity;
 import com.smoothstack.order.Main;
 import com.smoothstack.order.model.*;
 import com.smoothstack.order.repo.*;
+import com.smoothstack.order.service.OrderService;
 import error.OrderTimeException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
