@@ -72,7 +72,7 @@ class OrderServiceTest {
         List<FoodOrderEntity> foodOrderEntities = new ArrayList<>();
         foodOrderEntities.add(foodOrderEntity);
 
-        PriceEntity priceEntity = new PriceEntity().setFoodPrice(23.09f);
+        PriceEntity priceEntity = new PriceEntity().setFood(23.09f);
 
         OrderEntity orderEntity = new OrderEntity()
                 .setDelivery(true).setRefunded(false)

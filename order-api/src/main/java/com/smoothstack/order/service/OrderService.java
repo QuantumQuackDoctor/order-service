@@ -79,7 +79,7 @@ public class OrderService implements OrderApi {
             for (MenuItemEntity menuItemEntity : foodOrder.getOrderItems())
                 totalFoodPrice += menuItemEntity.getPrice();
 
-        orderEntity.getPriceEntity().setFoodPrice(totalFoodPrice);
+        orderEntity.getPriceEntity().setFood(totalFoodPrice);
         orderRepo.save(orderEntity);
         return ResponseEntity.ok(new CreateResponse().type(CreateResponse.TypeEnum.STRIPE)
                 .id(String.valueOf(orderEntity.getId())).setAddress(orderEntity.getAddress()));
@@ -114,7 +114,7 @@ public class OrderService implements OrderApi {
         List<FoodOrderEntity> foodOrderEntities = new ArrayList<>();
         foodOrderEntities.add(foodOrderEntity);
 
-        PriceEntity priceEntity = new PriceEntity().setFoodPrice(23.09f);
+        PriceEntity priceEntity = new PriceEntity().setFood(23.09f);
 
         OrderEntity orderEntity = new OrderEntity()
                 .setId(23L).setDelivery(true).setRefunded(false)
