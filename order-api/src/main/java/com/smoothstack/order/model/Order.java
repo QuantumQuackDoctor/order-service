@@ -351,7 +351,6 @@ public class Order   {
 
   public boolean checkRequiredFields (){
     if (this.orderType == null) return false;
-    if (this.restaurantId == null) return false;
     if (this.address == null) return false;
     if (this.orderTime == null) return false;
     if (this.refunded == null) return false;

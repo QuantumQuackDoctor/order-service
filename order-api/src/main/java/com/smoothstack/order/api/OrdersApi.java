@@ -68,10 +68,10 @@ public interface OrdersApi {
      * @param paymentStatus matches paymentStatus (optional)
      * @return OK (status code 200)
      */
-    @ApiOperation(value = "Admin get orders", nickname = "getOrders", notes = "admin search orders", response = Order.class, responseContainer = "List", authorizations = {
+    @ApiOperation(value = "Admin get orders", nickname = "getOrders", notes = "admin search orders", response = Order.class, responseContainer = "List", /*authorizations = {
         
         @Authorization(value = "JWT")
-         }, tags={ "order", })
+         },*/ tags={ "order", })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = Order.class, responseContainer = "List") })
     @GetMapping(

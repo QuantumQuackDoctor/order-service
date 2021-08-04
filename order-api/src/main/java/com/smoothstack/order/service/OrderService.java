@@ -12,6 +12,8 @@ import error.OrderTimeException;
 import io.swagger.annotations.ApiParam;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.datetime.DateFormatter;
+import org.springframework.format.datetime.standard.InstantFormatter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,10 +21,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.context.request.NativeWebRequest;
 
 import javax.validation.Valid;
+import java.time.Instant;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @Service
@@ -64,22 +69,24 @@ public class OrderService implements OrderApi {
 
     @Override
     public ResponseEntity<?> createOrder(@ApiParam(value = "")
-                                         @Valid @RequestBody(required = false) Order orderDTO) {
+                                          @RequestBody(required = false) Order orderDTO) {
         OrderEntity orderEntity = convertToEntity(orderDTO);
         orderEntity.setActive(true);
-        ZonedDateTime deliverySlot = orderEntity.getOrderTimeEntity().getDeliverySlot();
-        ZonedDateTime restaurantAccept = orderEntity.getOrderTimeEntity().getRestaurantAccept();
-        long diff = ChronoUnit.MINUTES.between(restaurantAccept, deliverySlot);
-        if (diff < 15) return ResponseEntity.badRequest().body(
-                new OrderTimeException("Time slot too early"));
+        if (orderEntity.getDelivery()) {
+            ZonedDateTime deliverySlot = orderEntity.getOrderTimeEntity().getDeliverySlot();
+            ZonedDateTime restaurantAccept = orderEntity.getOrderTimeEntity().getRestaurantAccept();
+            long diff = ChronoUnit.MINUTES.between(restaurantAccept, deliverySlot);
+            if (diff < 15) return ResponseEntity.badRequest().body(
+                    new OrderTimeException("Time slot too early"));
+        }
 
-        float totalFoodPrice = 0f;
+/*        float totalFoodPrice = 0f;
 
         for (FoodOrderEntity foodOrder : orderEntity.getItems())
             for (MenuItemEntity menuItemEntity : foodOrder.getOrderItems())
                 totalFoodPrice += menuItemEntity.getPrice();
 
-        orderEntity.getPriceEntity().setFood(totalFoodPrice);
+        orderEntity.getPriceEntity().setFood(totalFoodPrice);*/
         orderRepo.save(orderEntity);
         return ResponseEntity.ok(new CreateResponse().type(CreateResponse.TypeEnum.STRIPE)
                 .id(String.valueOf(orderEntity.getId())).setAddress(orderEntity.getAddress()));
@@ -127,6 +134,8 @@ public class OrderService implements OrderApi {
     public Order convertToDTO(OrderEntity orderEntity) {
         Order orderDTO = modelMapper.map(orderEntity, Order.class);
 
+        orderDTO.setOrderTime(convertTimeToDTO(orderEntity.getOrderTimeEntity()));
+
         orderDTO.setOrderType((orderEntity.getDelivery() ? Order.OrderTypeEnum.DELIVERY : Order.OrderTypeEnum.PICKUP));
         if (orderEntity.getDriver() != null) orderDTO.setDriverId(String.valueOf(orderEntity.getDriver().getId()));
         List<FoodOrderEntity> foodOrderEntities = orderEntity.getItems();
@@ -135,6 +144,7 @@ public class OrderService implements OrderApi {
 
         for (FoodOrderEntity foodOrderEntity : foodOrderEntities) {
             OrderFood orderFood = modelMapper.map(foodOrderEntity, OrderFood.class);
+            orderFood.setRestaurantId(String.valueOf(foodOrderEntity.getRestaurantId()));
             orderFoodList.add(orderFood);
             for (MenuItemEntity menuItemEntity : foodOrderEntity.getOrderItems()) {
                 OrderItems orderItems = modelMapper.map(menuItemEntity, OrderItems.class);
@@ -153,6 +163,16 @@ public class OrderService implements OrderApi {
 
     }
 
+    public OrderOrderTime convertTimeToDTO (OrderTimeEntity orderTimeEntity){
+
+        String deliveryTime = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(
+                orderTimeEntity.getDeliverySlot());
+        String restaurantAccept = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(
+                orderTimeEntity.getRestaurantAccept());
+        return new OrderOrderTime().deliverySlot(deliveryTime).restaurantAccept(restaurantAccept);
+
+    }
+
     public OrderEntity convertToEntity(Order orderDTO) {
         OrderEntity orderEntity = modelMapper.map(orderDTO, OrderEntity.class);
 
@@ -162,6 +182,12 @@ public class OrderService implements OrderApi {
         }
 
         orderEntity.setDelivery(orderDTO.getOrderType().equals(Order.OrderTypeEnum.DELIVERY));
+
+
+       /* OrderOrderTime orderTimeDTO =
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyy-MM-dd'T'HH:mm:ss.SSSX");*/
+
+
 
         List<OrderFood> orderFoodList = orderDTO.getFood();
         List<FoodOrderEntity> foodOrderEntities = new ArrayList<>();
@@ -182,6 +208,7 @@ public class OrderService implements OrderApi {
                 }
                 FoodOrderEntity foodOrderEntity = new FoodOrderEntity();
                 foodOrderEntity.setOrderItems(itemEntities);
+                foodOrderEntity.setRestaurantId(Long.parseLong (orderFood.getRestaurantId()));
                 foodOrderEntities.add(foodOrderEntity);
             }
             orderEntity.setItems(foodOrderEntities);

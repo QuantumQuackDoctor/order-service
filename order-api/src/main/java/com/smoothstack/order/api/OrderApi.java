@@ -26,6 +26,7 @@ import java.util.Optional;
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2021-06-30T22:53:09.076567700-06:00[America/Denver]")
 @Validated
 @Api(value = "order", description = "the order API")
+@CrossOrigin
 public interface OrderApi {
 
     default Optional<NativeWebRequest> getRequest() {

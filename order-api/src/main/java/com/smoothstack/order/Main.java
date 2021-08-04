@@ -11,7 +11,7 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-@SpringBootApplication (exclude = {SecurityAutoConfiguration.class})
+@SpringBootApplication (/*exclude = {SecurityAutoConfiguration.class}*/)
 @EntityScan("com.database.ormlibrary")
 public class Main implements CommandLineRunner {
 
@@ -29,13 +29,13 @@ public class Main implements CommandLineRunner {
    @Bean
     public WebMvcConfigurer webConfigurer() {
         return new WebMvcConfigurer() {
-            /*@Override
+            @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
                         .allowedOrigins("*")
                         .allowedMethods("*")
                         .allowedHeaders("Content-Type");
-            }*/
+            }
         };
     }
 

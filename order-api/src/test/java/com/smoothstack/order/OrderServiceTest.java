@@ -5,28 +5,23 @@ import com.database.ormlibrary.order.FoodOrderEntity;
 import com.database.ormlibrary.order.OrderEntity;
 import com.database.ormlibrary.order.OrderTimeEntity;
 import com.database.ormlibrary.order.PriceEntity;
-import com.smoothstack.order.Main;
-import com.smoothstack.order.model.*;
-import com.smoothstack.order.repo.*;
+import com.smoothstack.order.model.CreateResponse;
+import com.smoothstack.order.model.Order;
+import com.smoothstack.order.model.OrderOrderTime;
 import com.smoothstack.order.service.OrderService;
 import error.OrderTimeException;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest (classes = { Main.class })
 class OrderServiceTest {
@@ -50,7 +45,7 @@ class OrderServiceTest {
 
         OrderOrderTime newDeliveryTime = orderDTO.getOrderTime();
 
-        newDeliveryTime.setDeliverySlot("2011-12-03T10:25:30+01:00");
+        newDeliveryTime.setDeliverySlot("2011-12-03T10:25:30.000Z");
 
         orderDTO.setOrderTime(newDeliveryTime);
 
@@ -60,8 +55,13 @@ class OrderServiceTest {
     }
 
     public OrderEntity getSampleOrder(){
-        OrderTimeEntity orderTimeEntity = new OrderTimeEntity().setDeliverySlot(ZonedDateTime.parse("2011-12-03T10:35:30+01:00"))
-                .setRestaurantAccept(ZonedDateTime.parse("2011-12-03T10:15:30+01:00"));
+        OrderTimeEntity orderTimeEntity = new OrderTimeEntity()
+                .setDeliverySlot(ZonedDateTime.ofInstant(
+                        Instant.parse("2011-12-03T10:35:30.000Z"),
+                        ZoneOffset.UTC))
+                .setRestaurantAccept(ZonedDateTime.ofInstant(
+                        Instant.parse("2011-12-03T10:15:30.000Z"),
+                        ZoneOffset.UTC));
 
         List<MenuItemEntity> orderItemsEntities = new ArrayList<>();
         MenuItemEntity menuItemEntity1 = new MenuItemEntity().setName("Sample Item 1").setId(1L);
