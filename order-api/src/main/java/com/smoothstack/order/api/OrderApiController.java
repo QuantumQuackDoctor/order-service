@@ -36,7 +36,7 @@ public class OrderApiController implements OrderApi {
     }
 
     @Override
-    @PreAuthorize("hasRole('ROLE_user')")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<List<Order>> getOrder(@ApiParam(value = "if true only returns pending orders") @Valid @RequestParam(value = "active", required = false) Boolean active){
         return orderService.getOrder(true);
     }
