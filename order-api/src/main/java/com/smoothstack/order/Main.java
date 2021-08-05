@@ -1,5 +1,6 @@
 package com.smoothstack.order;
 
+import com.database.security.SecurityConfig;
 import com.fasterxml.jackson.databind.Module;
 import org.openapitools.jackson.nullable.JsonNullableModule;
 import org.springframework.boot.CommandLineRunner;
@@ -9,10 +10,14 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-@SpringBootApplication (/*exclude = {SecurityAutoConfiguration.class}*/)
+@SpringBootApplication
 @EntityScan("com.database.ormlibrary")
+@Import(SecurityConfig.class)
+@EnableJpaRepositories(basePackages = {"com.database.security", "com.smoothstack.order.repo"})
 public class Main implements CommandLineRunner {
 
     public static void main(String[] args) throws Exception {
@@ -24,19 +29,6 @@ public class Main implements CommandLineRunner {
         if (arg0.length > 0 && arg0[0].equals("exitcode")) {
             throw new ExitException();
         }
-    }
-
-   @Bean
-    public WebMvcConfigurer webConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")
-                        .allowedOrigins("*")
-                        .allowedMethods("*")
-                        .allowedHeaders("Content-Type");
-            }
-        };
     }
 
     @Bean
