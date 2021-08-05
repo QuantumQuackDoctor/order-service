@@ -13,6 +13,9 @@ import com.smoothstack.order.model.InlineObject2;
 import com.smoothstack.order.model.CreateResponse;
 import java.util.List;
 import com.smoothstack.order.model.Order;
+import com.smoothstack.order.exception.EmptyCartException;
+import com.smoothstack.order.exception.MissingFieldsException;
+import com.smoothstack.order.exception.OrderTimeException;
 import io.swagger.annotations.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -53,7 +56,7 @@ public interface OrderApi {
         produces = { "application/json", "application/xml" },
         consumes = { "application/json", "application/xml" }
     )
-    default ResponseEntity<?> createOrder(@ApiParam(value = ""  )  @Valid @RequestBody(required = false) Order order) {
+    default ResponseEntity<CreateResponse> createOrder(@ApiParam(value = ""  )  @Valid @RequestBody(required = false) Order order) throws EmptyCartException, MissingFieldsException, OrderTimeException {
         getRequest().ifPresent(request -> {
             for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {

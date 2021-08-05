@@ -9,19 +9,19 @@ import com.smoothstack.order.model.CreateResponse;
 import com.smoothstack.order.model.Order;
 import com.smoothstack.order.model.OrderOrderTime;
 import com.smoothstack.order.service.OrderService;
-import error.OrderTimeException;
+import com.smoothstack.order.exception.OrderTimeException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest (classes = { Main.class })
 class OrderServiceTest {
@@ -30,7 +30,7 @@ class OrderServiceTest {
     private OrderService orderService;
 
     @Test
-    void createOrderTest(){
+    void createOrderTest() throws OrderTimeException {
         //inserts sample items in empty db
 
         OrderEntity orderEntity = getSampleOrder();
@@ -49,8 +49,7 @@ class OrderServiceTest {
 
         orderDTO.setOrderTime(newDeliveryTime);
 
-        assertEquals (orderService.createOrder(orderDTO).getBody().getClass(),
-                OrderTimeException.class);
+        assertThrows (OrderTimeException.class, () -> {orderService.createOrder(orderDTO);});
 
     }
 

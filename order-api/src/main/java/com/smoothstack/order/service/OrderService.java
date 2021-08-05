@@ -5,15 +5,15 @@ import com.database.ormlibrary.order.FoodOrderEntity;
 import com.database.ormlibrary.order.OrderEntity;
 import com.database.ormlibrary.order.OrderTimeEntity;
 import com.database.ormlibrary.order.PriceEntity;
+import com.smoothstack.order.exception.OrderExceptionHandler;
 import com.smoothstack.order.model.*;
 import com.smoothstack.order.repo.*;
 import com.smoothstack.order.api.OrderApi;
-import error.OrderTimeException;
+import com.smoothstack.order.exception.OrderTimeException;
 import io.swagger.annotations.ApiParam;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.datetime.DateFormatter;
-import org.springframework.format.datetime.standard.InstantFormatter;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,13 +21,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.context.request.NativeWebRequest;
 
 import javax.validation.Valid;
-import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 
 @Service
@@ -68,25 +66,17 @@ public class OrderService implements OrderApi {
     }
 
     @Override
-    public ResponseEntity<?> createOrder(@ApiParam(value = "")
-                                          @RequestBody(required = false) Order orderDTO) {
+    public ResponseEntity<CreateResponse> createOrder(@ApiParam(value = "")
+                                          @RequestBody(required = false) Order orderDTO) throws OrderTimeException {
         OrderEntity orderEntity = convertToEntity(orderDTO);
         orderEntity.setActive(true);
         if (orderEntity.getDelivery()) {
             ZonedDateTime deliverySlot = orderEntity.getOrderTimeEntity().getDeliverySlot();
             ZonedDateTime restaurantAccept = orderEntity.getOrderTimeEntity().getRestaurantAccept();
             long diff = ChronoUnit.MINUTES.between(restaurantAccept, deliverySlot);
-            if (diff < 15) return ResponseEntity.badRequest().body(
-                    new OrderTimeException("Time slot too early"));
+            if (diff < 15) throw new OrderTimeException("Time slot too early");
         }
 
-/*        float totalFoodPrice = 0f;
-
-        for (FoodOrderEntity foodOrder : orderEntity.getItems())
-            for (MenuItemEntity menuItemEntity : foodOrder.getOrderItems())
-                totalFoodPrice += menuItemEntity.getPrice();
-
-        orderEntity.getPriceEntity().setFood(totalFoodPrice);*/
         orderRepo.save(orderEntity);
         return ResponseEntity.ok(new CreateResponse().type(CreateResponse.TypeEnum.STRIPE)
                 .id(String.valueOf(orderEntity.getId())).setAddress(orderEntity.getAddress()));

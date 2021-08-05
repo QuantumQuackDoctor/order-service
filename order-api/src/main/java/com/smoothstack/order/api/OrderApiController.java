@@ -1,24 +1,18 @@
 package com.smoothstack.order.api;
 
-import com.database.ormlibrary.food.MenuItemEntity;
-import com.database.ormlibrary.order.OrderEntity;
-import com.database.ormlibrary.order.OrderTimeEntity;
 import com.smoothstack.order.model.CreateResponse;
 import com.smoothstack.order.model.Order;
-import com.smoothstack.order.model.OrderOrderTime;
 import com.smoothstack.order.service.OrderService;
-import error.EmptyCartException;
-import error.MissingFieldsException;
+import com.smoothstack.order.exception.EmptyCartException;
+import com.smoothstack.order.exception.MissingFieldsException;
+import com.smoothstack.order.exception.OrderTimeException;
 import io.swagger.annotations.ApiParam;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.NativeWebRequest;
 
 import javax.validation.Valid;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2021-06-30T22:53:09.076567700-06:00[America/Denver]")
@@ -48,16 +42,16 @@ public class OrderApiController implements OrderApi {
     }
 
     @Override
-    public ResponseEntity<?> createOrder(Order order) {
+    public ResponseEntity<CreateResponse> createOrder(Order order) throws MissingFieldsException, EmptyCartException, OrderTimeException {
        if (!order.checkRequiredFields())
-            return ResponseEntity.badRequest().body (new MissingFieldsException("Missing require fields"));
+            throw new MissingFieldsException("Missing require fields");
        if (order.getFood().size() == 0)
-           return ResponseEntity.badRequest().body(new EmptyCartException("No items in cart."));
+           throw new EmptyCartException("No items in cart.");
         return orderService.createOrder(order);
     }
 
-    @PutMapping(path = "/order/sample")
-    public ResponseEntity<?> addSampleOrder (){
+/*    @PutMapping(path = "/order/sample")
+    public ResponseEntity<CreateResponse> addSampleOrder (){
         return ResponseEntity.ok(orderService.createSampleOrder());
-    }
+    }*/
 }
