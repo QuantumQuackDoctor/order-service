@@ -1,10 +1,11 @@
-package com.smoothstack.order;
+package com.smoothstack.order.service;
 
 import com.database.ormlibrary.food.MenuItemEntity;
 import com.database.ormlibrary.order.FoodOrderEntity;
 import com.database.ormlibrary.order.OrderEntity;
 import com.database.ormlibrary.order.OrderTimeEntity;
 import com.database.ormlibrary.order.PriceEntity;
+import com.smoothstack.order.Main;
 import com.smoothstack.order.model.CreateResponse;
 import com.smoothstack.order.model.Order;
 import com.smoothstack.order.model.OrderOrderTime;
@@ -23,7 +24,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@SpringBootTest (classes = { Main.class })
+@SpringBootTest
 class OrderServiceTest {
 
     @Autowired

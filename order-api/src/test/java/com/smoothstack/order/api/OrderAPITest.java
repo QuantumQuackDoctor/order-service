@@ -1,4 +1,4 @@
-package com.smoothstack.order;
+package com.smoothstack.order.api;
 
 import com.database.ormlibrary.food.MenuItemEntity;
 import com.database.ormlibrary.order.FoodOrderEntity;
@@ -28,19 +28,18 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = {Main.class})
+@SpringBootTest
 @AutoConfigureMockMvc
-
 public class OrderAPITest {
 
     @Autowired
     MockMvc mockMvc;
     ObjectMapper objectMapper = new ObjectMapper();
-    @MockBean(MenuItemRepo.class)
+    @MockBean
     private MenuItemRepo menuItemRepo;
-    @MockBean(OrderRepo.class)
+    @MockBean
     private OrderRepo orderRepo;
-    @MockBean(DriverRepo.class)
+    @MockBean
     private DriverRepo driverRepo;
     @MockBean
     private FoodOrderRepo foodOrderRepo;
