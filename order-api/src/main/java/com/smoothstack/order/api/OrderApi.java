@@ -10,9 +10,12 @@ import java.math.BigDecimal;
 import com.smoothstack.order.model.InlineObject;
 import com.smoothstack.order.model.InlineObject1;
 import com.smoothstack.order.model.InlineObject2;
-import com.smoothstack.order.model.InlineResponse200;
+import com.smoothstack.order.model.CreateResponse;
 import java.util.List;
 import com.smoothstack.order.model.Order;
+import com.smoothstack.order.exception.EmptyCartException;
+import com.smoothstack.order.exception.MissingFieldsException;
+import com.smoothstack.order.exception.OrderTimeException;
 import io.swagger.annotations.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -26,6 +29,7 @@ import java.util.Optional;
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2021-06-30T22:53:09.076567700-06:00[America/Denver]")
 @Validated
 @Api(value = "order", description = "the order API")
+@CrossOrigin
 public interface OrderApi {
 
     default Optional<NativeWebRequest> getRequest() {
@@ -41,20 +45,18 @@ public interface OrderApi {
      *         or Access token is missing or invalid (status code 401)
      *         or Forbidden (status code 403)
      */
-    @ApiOperation(value = "Create order", nickname = "createOrder", notes = "Create new order, sends back checkout session data. Payment intent will be canceled in 5 minutes if not paid. (Server note: use stripe webhooks to update payment status)", response = InlineResponse200.class, authorizations = {
-        
-        @Authorization(value = "JWT")
-         }, tags={ "order", })
+    @ApiOperation(value = "Create order", nickname = "createOrder", notes = "Create new order, sends back checkout session data. Payment intent will be canceled in 5 minutes if not paid. (Server note: use stripe webhooks to update payment status)",
+            response = CreateResponse.class, tags={ "order", })
     @ApiResponses(value = { 
-        @ApiResponse(code = 200, message = "OK", response = InlineResponse200.class),
+        @ApiResponse(code = 200, message = "OK", response = CreateResponse.class),
         @ApiResponse(code = 401, message = "Access token is missing or invalid", response = String.class),
         @ApiResponse(code = 403, message = "Forbidden") })
     @PutMapping(
-        value = "/order",
+        path = "/order",
         produces = { "application/json", "application/xml" },
         consumes = { "application/json", "application/xml" }
     )
-    default ResponseEntity<InlineResponse200> createOrder(@ApiParam(value = ""  )  @Valid @RequestBody(required = false) Order order) {
+    default ResponseEntity<CreateResponse> createOrder(@ApiParam(value = ""  )  @Valid @RequestBody(required = false) Order order) throws EmptyCartException, MissingFieldsException, OrderTimeException {
         getRequest().ifPresent(request -> {
             for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
@@ -216,10 +218,7 @@ public interface OrderApi {
      *         or Forbidden (status code 403)
      *         or restaurant/item not found (status code 404)
      */
-    @ApiOperation(value = "Get orders", nickname = "getOrder", notes = "Returns authenticated users orders, server will check ensure deliveryslot is valid for all chosen restaurants", response = Order.class, responseContainer = "List", authorizations = {
-        
-        @Authorization(value = "JWT")
-         }, tags={ "order", })
+    @ApiOperation(value = "Get orders", nickname = "getOrder", notes = "Returns authenticated users orders, server will check ensure deliveryslot is valid for all chosen restaurants", response = Order.class, responseContainer = "List", tags={ "order", })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = Order.class, responseContainer = "List"),
         @ApiResponse(code = 400, message = "Invalid deliverySlot"),
@@ -227,7 +226,7 @@ public interface OrderApi {
         @ApiResponse(code = 403, message = "Forbidden"),
         @ApiResponse(code = 404, message = "restaurant/item not found") })
     @GetMapping(
-        value = "/order",
+        path = "/order",
         produces = { "application/json", "application/xml" }
     )
     default ResponseEntity<List<Order>> getOrder(@ApiParam(value = "if true only returns pending orders") @Valid @RequestParam(value = "active", required = false) Boolean active) {
@@ -292,10 +291,10 @@ public interface OrderApi {
      *         or Forbidden (status code 403)
      *         or Item or order not found (status code 404)
      */
-    @ApiOperation(value = "Update Order Configurations", nickname = "updateOrderConfigurations", notes = "Updates active order", authorizations = {
+    @ApiOperation(value = "Update Order Configurations", nickname = "updateOrderConfigurations", notes = "Updates active order"/*, authorizations = {
         
         @Authorization(value = "JWT")
-         }, tags={ "order", })
+         }*/, tags={ "order", })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "Update successful"),
         @ApiResponse(code = 401, message = "Access token is missing or invalid", response = String.class),

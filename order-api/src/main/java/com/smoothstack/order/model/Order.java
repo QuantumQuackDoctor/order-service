@@ -113,7 +113,6 @@ public class Order   {
   */
   @ApiModelProperty(value = "")
 
-
   public OrderTypeEnum getOrderType() {
     return orderType;
   }
@@ -348,6 +347,16 @@ public class Order   {
       return "null";
     }
     return o.toString().replace("\n", "\n    ");
+  }
+
+  public boolean checkRequiredFields (){
+    if (this.orderType == null) return false;
+    if (this.address == null) return false;
+    if (this.orderTime == null) return false;
+    if (this.refunded == null) return false;
+    if (this.price == null) return false;
+    if (this.food == null || this.food.size() == 0) return false;
+    return true;
   }
 }
 

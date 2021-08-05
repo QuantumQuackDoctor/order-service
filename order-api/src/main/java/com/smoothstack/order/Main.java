@@ -6,11 +6,13 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.ExitCodeGenerator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-@SpringBootApplication
+@SpringBootApplication (/*exclude = {SecurityAutoConfiguration.class}*/)
+@EntityScan("com.database.ormlibrary")
 public class Main implements CommandLineRunner {
 
     public static void main(String[] args) throws Exception {
@@ -24,16 +26,16 @@ public class Main implements CommandLineRunner {
         }
     }
 
-    @Bean
+   @Bean
     public WebMvcConfigurer webConfigurer() {
         return new WebMvcConfigurer() {
-            /*@Override
+            @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
                         .allowedOrigins("*")
                         .allowedMethods("*")
                         .allowedHeaders("Content-Type");
-            }*/
+            }
         };
     }
 
@@ -51,5 +53,4 @@ public class Main implements CommandLineRunner {
         }
 
     }
-
 }
