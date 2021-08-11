@@ -7,10 +7,7 @@ import com.database.ormlibrary.order.OrderTimeEntity;
 import com.database.ormlibrary.order.PriceEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smoothstack.order.model.Order;
-import com.smoothstack.order.repo.DriverRepo;
-import com.smoothstack.order.repo.FoodOrderRepo;
-import com.smoothstack.order.repo.MenuItemRepo;
-import com.smoothstack.order.repo.OrderRepo;
+import com.smoothstack.order.repo.*;
 import com.smoothstack.order.service.OrderService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +40,8 @@ public class OrderAPITest {
     private DriverRepo driverRepo;
     @MockBean
     private FoodOrderRepo foodOrderRepo;
+    @MockBean
+    private RestaurantRepo restaurantRepo;
     @Autowired
     private OrderService orderService;
 
