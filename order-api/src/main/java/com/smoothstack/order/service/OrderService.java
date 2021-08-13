@@ -5,7 +5,6 @@ import com.database.ormlibrary.order.FoodOrderEntity;
 import com.database.ormlibrary.order.OrderEntity;
 import com.database.ormlibrary.order.OrderTimeEntity;
 import com.database.ormlibrary.order.PriceEntity;
-import com.smoothstack.order.exception.OrderExceptionHandler;
 import com.smoothstack.order.model.*;
 import com.smoothstack.order.repo.*;
 import com.smoothstack.order.api.OrderApi;
@@ -13,7 +12,6 @@ import com.smoothstack.order.exception.OrderTimeException;
 import io.swagger.annotations.ApiParam;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -39,14 +37,17 @@ public class OrderService implements OrderApi {
     private final MenuItemRepo menuItemRepo;
     @Autowired
     private final FoodOrderRepo foodOrderRepo;
+    @Autowired
+    private final RestaurantRepo restaurantRepo;
 
     private final ModelMapper modelMapper;
 
-    public OrderService(OrderRepo orderRepo, DriverRepo driverRepo, MenuItemRepo menuItemRepo, FoodOrderRepo foodOrderRepo) {
+    public OrderService(OrderRepo orderRepo, DriverRepo driverRepo, MenuItemRepo menuItemRepo, FoodOrderRepo foodOrderRepo, RestaurantRepo restaurantRepo) {
         this.orderRepo = orderRepo;
         this.driverRepo = driverRepo;
         this.menuItemRepo = menuItemRepo;
         this.foodOrderRepo = foodOrderRepo;
+        this.restaurantRepo = restaurantRepo;
         this.modelMapper = new ModelMapper();
     }
 
@@ -130,11 +131,13 @@ public class OrderService implements OrderApi {
         if (orderEntity.getDriver() != null) orderDTO.setDriverId(String.valueOf(orderEntity.getDriver().getId()));
         List<FoodOrderEntity> foodOrderEntities = orderEntity.getItems();
         List<OrderFood> orderFoodList = new ArrayList<>();
-        List<OrderItems> orderItemsList = new ArrayList<>();
+        List<OrderItems> orderItemsList;
 
         for (FoodOrderEntity foodOrderEntity : foodOrderEntities) {
+            orderItemsList = new ArrayList<>();
             OrderFood orderFood = modelMapper.map(foodOrderEntity, OrderFood.class);
             orderFood.setRestaurantId(String.valueOf(foodOrderEntity.getRestaurantId()));
+            orderFood.setRestaurantName(restaurantRepo.findById(foodOrderEntity.getRestaurantId()).get().getName());
             orderFoodList.add(orderFood);
             for (MenuItemEntity menuItemEntity : foodOrderEntity.getOrderItems()) {
                 OrderItems orderItems = modelMapper.map(menuItemEntity, OrderItems.class);
@@ -155,12 +158,18 @@ public class OrderService implements OrderApi {
 
     public OrderOrderTime convertTimeToDTO (OrderTimeEntity orderTimeEntity){
 
-        String deliveryTime = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(
-                orderTimeEntity.getDeliverySlot());
-        String restaurantAccept = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(
-                orderTimeEntity.getRestaurantAccept());
-        return new OrderOrderTime().deliverySlot(deliveryTime).restaurantAccept(restaurantAccept);
+        OrderOrderTime orderTimeDTO = new OrderOrderTime();
+        if (orderTimeEntity.getOrderComplete() != null) {
+            String orderComplete = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(
+                            orderTimeEntity.getOrderComplete());
+            orderTimeDTO.setDelivered(orderComplete);
+        }
+        orderTimeDTO.setDeliverySlot(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(
+                orderTimeEntity.getDeliverySlot()));
+        orderTimeDTO.setRestaurantAccept(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(
+                orderTimeEntity.getRestaurantAccept()));
 
+        return orderTimeDTO;
     }
 
     public OrderEntity convertToEntity(Order orderDTO) {
@@ -173,11 +182,8 @@ public class OrderService implements OrderApi {
 
         orderEntity.setDelivery(orderDTO.getOrderType().equals(Order.OrderTypeEnum.DELIVERY));
 
-
        /* OrderOrderTime orderTimeDTO =
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyy-MM-dd'T'HH:mm:ss.SSSX");*/
-
-
 
         List<OrderFood> orderFoodList = orderDTO.getFood();
         List<FoodOrderEntity> foodOrderEntities = new ArrayList<>();
