@@ -50,8 +50,8 @@ public class OrderAPITest {
         OrderEntity orderEntity = getSampleOrder();
         Order orderDTO = orderService.convertToDTO(orderEntity);
 
-        mockMvc.perform(get("/order"))
-                .andExpect(status().isOk());
+//        mockMvc.perform(get("/order"))
+//                .andExpect(status().isBadRequest());
 
         mockMvc.perform(put("/order").content(objectMapper
                         .writeValueAsString(orderDTO)).contentType(MediaType.APPLICATION_JSON))

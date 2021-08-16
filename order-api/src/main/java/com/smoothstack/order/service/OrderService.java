@@ -12,6 +12,8 @@ import com.smoothstack.order.exception.OrderTimeException;
 import io.swagger.annotations.ApiParam;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -56,14 +58,18 @@ public class OrderService implements OrderApi {
         return OrderApi.super.getRequest();
     }
 
-    public void deleteOrder(Long id){
+    @Override
+    public ResponseEntity<Void> deleteOrder(String idString){
+        Long id = Long.parseLong(idString);
         OrderEntity orderEntity = orderRepo.findById(id).isPresent() ?
                 orderRepo.findById(id).get() : null;
-        if (orderEntity == null) return;
+        if (orderEntity == null) new ResponseEntity<>(HttpStatus.OK);
         List <FoodOrderEntity> foodOrderEntityList = orderEntity.getItems();
         for (FoodOrderEntity foodOrderEntity : foodOrderEntityList)
             foodOrderRepo.delete(foodOrderEntity);
         orderRepo.deleteById(id);
+
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @Override
@@ -84,15 +90,16 @@ public class OrderService implements OrderApi {
     }
 
     @Override
-    public ResponseEntity<List<Order>> getOrder(@ApiParam(value = "if true only returns pending orders") @Valid @RequestParam(value = "active", required = false) Boolean active) {
+    public ResponseEntity<Order> getOrder(@ApiParam(value = "if true only returns pending orders") @Valid @RequestParam(value = "id", required = false) String id) {
 
-        Iterable<OrderEntity> orderEntities = orderRepo.findAll();
-        List<Order> orderDTOs = new ArrayList<>();
+//        Iterable<OrderEntity> orderEntities = orderRepo.findAll();
+//        List<Order> orderDTOs = new ArrayList<>();
+        Optional<OrderEntity> orderEntity = orderRepo.findById(Long.parseLong(id));
+        Order orderDTO = convertToDTO(orderEntity.get());
+//        for (OrderEntity orderEntity : orderEntities)
+//            orderDTOs.add(convertToDTO(orderEntity));
 
-        for (OrderEntity orderEntity : orderEntities)
-            orderDTOs.add(convertToDTO(orderEntity));
-
-        return ResponseEntity.ok(orderDTOs);
+        return ResponseEntity.ok(orderDTO);
     }
 
     public OrderEntity createSampleOrder() {

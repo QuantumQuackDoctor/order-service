@@ -7,6 +7,7 @@ import com.smoothstack.order.exception.EmptyCartException;
 import com.smoothstack.order.exception.MissingFieldsException;
 import com.smoothstack.order.exception.OrderTimeException;
 import io.swagger.annotations.ApiParam;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -37,8 +38,8 @@ public class OrderApiController implements OrderApi {
 
     @Override
     @PreAuthorize("permitAll()")
-    public ResponseEntity<List<Order>> getOrder(@ApiParam(value = "if true only returns pending orders") @Valid @RequestParam(value = "active", required = false) Boolean active){
-        return orderService.getOrder(true);
+    public ResponseEntity<Order> getOrder(@ApiParam(value = "if true only returns pending orders") @Valid @RequestParam(value = "id", required = false) String id){
+        return orderService.getOrder(id);
     }
 
     @Override
@@ -48,10 +49,16 @@ public class OrderApiController implements OrderApi {
             throw new MissingFieldsException("Missing require fields");
        if (order.getFood().size() == 0)
            throw new EmptyCartException("No items in cart.");
-        return orderService.createOrder(order);
+       return orderService.createOrder(order);
     }
 
-/*    @PutMapping(path = "/order/sample")
+    @Override
+    public ResponseEntity<Void> deleteOrder(String id) {
+        orderService.deleteOrder(id);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    /*    @PutMapping(path = "/order/sample")
     public ResponseEntity<CreateResponse> addSampleOrder (){
         return ResponseEntity.ok(orderService.createSampleOrder());
     }*/
