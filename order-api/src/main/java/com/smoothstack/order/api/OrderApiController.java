@@ -43,6 +43,7 @@ public class OrderApiController implements OrderApi {
     }
 
     @Override
+    @PreAuthorize("hasAuthority('user')")
     public ResponseEntity<CreateResponse> createOrder(Order order) throws MissingFieldsException, EmptyCartException, OrderTimeException {
        if (!order.checkRequiredFields())
             throw new MissingFieldsException("Missing require fields");
