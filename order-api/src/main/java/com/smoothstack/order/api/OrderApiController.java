@@ -1,5 +1,6 @@
 package com.smoothstack.order.api;
 
+import com.smoothstack.order.exception.UserNotFoundException;
 import com.smoothstack.order.model.CreateResponse;
 import com.smoothstack.order.model.Order;
 import com.smoothstack.order.service.OrderService;
@@ -51,8 +52,9 @@ public class OrderApiController implements OrderApi {
         return orderService.createOrder(order);
     }
 
-/*    @PutMapping(path = "/order/sample")
-    public ResponseEntity<CreateResponse> addSampleOrder (){
-        return ResponseEntity.ok(orderService.createSampleOrder());
-    }*/
+    @PreAuthorize("permitAll")
+    @GetMapping (path = "/userorders", produces = {"application/json"})
+    public ResponseEntity<List<Order>> getUserOrders (@Valid @RequestParam (value = "userId", required = true) Long userId) throws UserNotFoundException {
+        return ResponseEntity.ok (orderService.getUserOrders (userId));
+    }
 }

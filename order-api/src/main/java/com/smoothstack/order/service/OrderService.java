@@ -5,13 +5,14 @@ import com.database.ormlibrary.order.FoodOrderEntity;
 import com.database.ormlibrary.order.OrderEntity;
 import com.database.ormlibrary.order.OrderTimeEntity;
 import com.database.ormlibrary.order.PriceEntity;
+import com.database.ormlibrary.user.UserEntity;
+import com.smoothstack.order.exception.UserNotFoundException;
 import com.smoothstack.order.model.*;
 import com.smoothstack.order.repo.*;
 import com.smoothstack.order.api.OrderApi;
 import com.smoothstack.order.exception.OrderTimeException;
 import io.swagger.annotations.ApiParam;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,25 +30,22 @@ import java.util.Optional;
 @Service
 public class OrderService implements OrderApi {
 
-    @Autowired
     private final OrderRepo orderRepo;
-    @Autowired
     private final DriverRepo driverRepo;
-    @Autowired
     private final MenuItemRepo menuItemRepo;
-    @Autowired
     private final FoodOrderRepo foodOrderRepo;
-    @Autowired
     private final RestaurantRepo restaurantRepo;
+    private final UserRepo userRepo;
 
     private final ModelMapper modelMapper;
 
-    public OrderService(OrderRepo orderRepo, DriverRepo driverRepo, MenuItemRepo menuItemRepo, FoodOrderRepo foodOrderRepo, RestaurantRepo restaurantRepo) {
+    public OrderService(OrderRepo orderRepo, DriverRepo driverRepo, MenuItemRepo menuItemRepo, FoodOrderRepo foodOrderRepo, RestaurantRepo restaurantRepo, UserRepo userRepo) {
         this.orderRepo = orderRepo;
         this.driverRepo = driverRepo;
         this.menuItemRepo = menuItemRepo;
         this.foodOrderRepo = foodOrderRepo;
         this.restaurantRepo = restaurantRepo;
+        this.userRepo = userRepo;
         this.modelMapper = new ModelMapper();
     }
 
@@ -61,13 +59,12 @@ public class OrderService implements OrderApi {
                 orderRepo.findById(id).get() : null;
         if (orderEntity == null) return;
         List <FoodOrderEntity> foodOrderEntityList = orderEntity.getItems();
-        for (FoodOrderEntity foodOrderEntity : foodOrderEntityList)
-            foodOrderRepo.delete(foodOrderEntity);
+        foodOrderRepo.deleteAll(foodOrderEntityList);
         orderRepo.deleteById(id);
     }
 
     @Override
-    public ResponseEntity<CreateResponse> createOrder(@ApiParam(value = "")
+    public ResponseEntity<CreateResponse> createOrder(@ApiParam()
                                           @RequestBody(required = false) Order orderDTO) throws OrderTimeException {
         OrderEntity orderEntity = convertToEntity(orderDTO);
         orderEntity.setActive(true);
@@ -93,6 +90,16 @@ public class OrderService implements OrderApi {
             orderDTOs.add(convertToDTO(orderEntity));
 
         return ResponseEntity.ok(orderDTOs);
+    }
+
+    public List<Order> getUserOrders (Long userId) throws UserNotFoundException {
+        Optional <UserEntity> userEntityOptional = userRepo.findById(userId);
+        if (userEntityOptional.isPresent()){
+            List <Order> orderList = new ArrayList<>();
+            userEntityOptional.get().getOrderList().forEach(orderEntity -> orderList.add (convertToDTO(orderEntity)));
+            return orderList;
+        }
+        throw new UserNotFoundException("User not found!");
     }
 
     public OrderEntity createSampleOrder() {
