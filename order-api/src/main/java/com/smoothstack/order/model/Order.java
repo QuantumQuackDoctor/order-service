@@ -60,8 +60,8 @@ public class Order   {
   @JsonProperty("driverId")
   private String driverId;
 
-  @JsonProperty("restaurantId")
-  private String restaurantId;
+/*  @JsonProperty("restaurantId")
+  private String restaurantId;*/
 
   @JsonProperty("driverNote")
   private String driverNote;
@@ -113,7 +113,6 @@ public class Order   {
   */
   @ApiModelProperty(value = "")
 
-
   public OrderTypeEnum getOrderType() {
     return orderType;
   }
@@ -142,17 +141,18 @@ public class Order   {
     this.driverId = driverId;
   }
 
-  public Order restaurantId(String restaurantId) {
-    this.restaurantId = restaurantId;
-    return this;
-  }
+
 
   /**
    * Get restaurantId
    * @return restaurantId
   */
-  @ApiModelProperty(value = "")
+/*  @ApiModelProperty(value = "")
 
+  public Order restaurantId(String restaurantId) {
+    this.restaurantId = restaurantId;
+    return this;
+  }
 
   public String getRestaurantId() {
     return restaurantId;
@@ -160,7 +160,7 @@ public class Order   {
 
   public void setRestaurantId(String restaurantId) {
     this.restaurantId = restaurantId;
-  }
+  }*/
 
   public Order driverNote(String driverNote) {
     this.driverNote = driverNote;
@@ -306,7 +306,7 @@ public class Order   {
     return Objects.equals(this.id, order.id) &&
         Objects.equals(this.orderType, order.orderType) &&
         Objects.equals(this.driverId, order.driverId) &&
-        Objects.equals(this.restaurantId, order.restaurantId) &&
+/*        Objects.equals(this.restaurantId, order.restaurantId) &&*/
         Objects.equals(this.driverNote, order.driverNote) &&
         Objects.equals(this.address, order.address) &&
         Objects.equals(this.orderTime, order.orderTime) &&
@@ -317,7 +317,7 @@ public class Order   {
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, orderType, driverId, restaurantId, driverNote, address, orderTime, refunded, price, food);
+    return Objects.hash(id, orderType, driverId /*restaurantId*/, driverNote, address, orderTime, refunded, price, food);
   }
 
   @Override
@@ -328,7 +328,7 @@ public class Order   {
     sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    orderType: ").append(toIndentedString(orderType)).append("\n");
     sb.append("    driverId: ").append(toIndentedString(driverId)).append("\n");
-    sb.append("    restaurantId: ").append(toIndentedString(restaurantId)).append("\n");
+/*    sb.append("    restaurantId: ").append(toIndentedString(restaurantId)).append("\n");*/
     sb.append("    driverNote: ").append(toIndentedString(driverNote)).append("\n");
     sb.append("    address: ").append(toIndentedString(address)).append("\n");
     sb.append("    orderTime: ").append(toIndentedString(orderTime)).append("\n");
@@ -348,6 +348,16 @@ public class Order   {
       return "null";
     }
     return o.toString().replace("\n", "\n    ");
+  }
+
+  public boolean checkRequiredFields (){
+    if (this.orderType == null) return false;
+    if (this.address == null) return false;
+    if (this.orderTime == null) return false;
+    if (this.refunded == null) return false;
+    if (this.price == null) return false;
+    if (this.food == null || this.food.size() == 0) return false;
+    return true;
   }
 }
 

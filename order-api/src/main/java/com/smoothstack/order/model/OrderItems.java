@@ -12,6 +12,10 @@ import javax.validation.Valid;
  */
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2021-06-30T22:53:09.076567700-06:00[America/Denver]")
 public class OrderItems   {
+
+  @JsonProperty("id")
+  private String id;
+
   @JsonProperty("name")
   private String name;
 
@@ -24,11 +28,21 @@ public class OrderItems   {
     return this;
   }
 
+  public String getId() {
+    return id;
+  }
+
+  public OrderItems setId(String id) {
+    this.id = id;
+    return this;
+  }
+
   /**
    * Get name
    * @return name
   */
   @ApiModelProperty(value = "")
+
 
 
   public String getName() {
