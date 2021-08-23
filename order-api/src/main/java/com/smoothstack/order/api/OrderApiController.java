@@ -44,16 +44,16 @@ public class OrderApiController implements OrderApi {
 
     @Override
     @PreAuthorize("hasAuthority('user')")
-    public ResponseEntity<CreateResponse> createOrder(Order order) throws MissingFieldsException, EmptyCartException, OrderTimeException {
+    public ResponseEntity<CreateResponse> createOrder(Order order, Long userId) throws MissingFieldsException, EmptyCartException, OrderTimeException, UserNotFoundException {
        if (!order.checkRequiredFields())
             throw new MissingFieldsException("Missing require fields");
        if (order.getFood().size() == 0)
            throw new EmptyCartException("No items in cart.");
-        return orderService.createOrder(order);
+        return orderService.createOrder(order, userId);
     }
 
     @PreAuthorize("permitAll")
-    @GetMapping (path = "/userorders", produces = {"application/json"})
+    @GetMapping (path = "/order/user", produces = {"application/json"})
     public ResponseEntity<List<Order>> getUserOrders (@Valid @RequestParam (value = "userId", required = true) Long userId) throws UserNotFoundException {
         return ResponseEntity.ok (orderService.getUserOrders (userId));
     }

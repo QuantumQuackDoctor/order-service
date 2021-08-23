@@ -7,6 +7,7 @@ package com.smoothstack.order.api;
 
 import java.math.BigDecimal;
 
+import com.smoothstack.order.exception.UserNotFoundException;
 import com.smoothstack.order.model.InlineObject;
 import com.smoothstack.order.model.InlineObject1;
 import com.smoothstack.order.model.InlineObject2;
@@ -56,7 +57,8 @@ public interface OrderApi {
         produces = { "application/json", "application/xml" },
         consumes = { "application/json", "application/xml" }
     )
-    default ResponseEntity<CreateResponse> createOrder(@ApiParam(value = ""  )  @Valid @RequestBody(required = false) Order order) throws EmptyCartException, MissingFieldsException, OrderTimeException {
+    default ResponseEntity<CreateResponse> createOrder(@ApiParam(value = ""  )  @Valid @RequestBody(required = false) Order order,
+                                                       @Valid @RequestParam (value = "userId") Long userId) throws EmptyCartException, MissingFieldsException, OrderTimeException, UserNotFoundException {
         getRequest().ifPresent(request -> {
             for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {

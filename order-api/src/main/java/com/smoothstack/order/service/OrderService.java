@@ -65,7 +65,8 @@ public class OrderService implements OrderApi {
 
     @Override
     public ResponseEntity<CreateResponse> createOrder(@ApiParam()
-                                          @RequestBody(required = false) Order orderDTO) throws OrderTimeException {
+                                                      @RequestBody(required = false) Order orderDTO,
+                                                      @RequestParam(value = "userId") Long userId) throws OrderTimeException, UserNotFoundException {
         OrderEntity orderEntity = convertToEntity(orderDTO);
         orderEntity.setActive(true);
         if (orderEntity.getDelivery()) {
@@ -75,6 +76,13 @@ public class OrderService implements OrderApi {
             if (diff < 15) throw new OrderTimeException("Time slot too early");
         }
 
+
+        Optional <UserEntity> userEntityOptional = userRepo.findById(userId);
+        if (userEntityOptional.isPresent()){
+            userEntityOptional.get().getOrderList().add(orderEntity);
+        }else{
+            throw new UserNotFoundException("User not found.");
+        }
         orderRepo.save(orderEntity);
         return ResponseEntity.ok(new CreateResponse().type(CreateResponse.TypeEnum.STRIPE)
                 .id(String.valueOf(orderEntity.getId())).setAddress(orderEntity.getAddress()));
@@ -92,11 +100,11 @@ public class OrderService implements OrderApi {
         return ResponseEntity.ok(orderDTOs);
     }
 
-    public List<Order> getUserOrders (Long userId) throws UserNotFoundException {
-        Optional <UserEntity> userEntityOptional = userRepo.findById(userId);
-        if (userEntityOptional.isPresent()){
-            List <Order> orderList = new ArrayList<>();
-            userEntityOptional.get().getOrderList().forEach(orderEntity -> orderList.add (convertToDTO(orderEntity)));
+    public List<Order> getUserOrders(Long userId) throws UserNotFoundException {
+        Optional<UserEntity> userEntityOptional = userRepo.findById(userId);
+        if (userEntityOptional.isPresent()) {
+            List<Order> orderList = new ArrayList<>();
+            userEntityOptional.get().getOrderList().forEach(orderEntity -> orderList.add(convertToDTO(orderEntity)));
             return orderList;
         }
         throw new UserNotFoundException("User not found!");
@@ -154,7 +162,7 @@ public class OrderService implements OrderApi {
             orderFood.setItems(orderItemsList);
         }
 
-        OrderPrice orderPrice = modelMapper.map (orderEntity.getPriceEntity(), OrderPrice.class);
+        OrderPrice orderPrice = modelMapper.map(orderEntity.getPriceEntity(), OrderPrice.class);
         orderDTO.setPrice(orderPrice);
 
         orderDTO.setFood(orderFoodList);
@@ -163,12 +171,12 @@ public class OrderService implements OrderApi {
 
     }
 
-    public OrderOrderTime convertTimeToDTO (OrderTimeEntity orderTimeEntity){
+    public OrderOrderTime convertTimeToDTO(OrderTimeEntity orderTimeEntity) {
 
         OrderOrderTime orderTimeDTO = new OrderOrderTime();
         if (orderTimeEntity.getOrderComplete() != null) {
             String orderComplete = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(
-                            orderTimeEntity.getOrderComplete());
+                    orderTimeEntity.getOrderComplete());
             orderTimeDTO.setDelivered(orderComplete);
         }
         orderTimeDTO.setDeliverySlot(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(
@@ -211,12 +219,12 @@ public class OrderService implements OrderApi {
                 }
                 FoodOrderEntity foodOrderEntity = new FoodOrderEntity();
                 foodOrderEntity.setOrderItems(itemEntities);
-                foodOrderEntity.setRestaurantId(Long.parseLong (orderFood.getRestaurantId()));
+                foodOrderEntity.setRestaurantId(Long.parseLong(orderFood.getRestaurantId()));
                 foodOrderEntities.add(foodOrderEntity);
             }
             orderEntity.setItems(foodOrderEntities);
             orderEntity.setOrderTimeEntity(new OrderTimeEntity().setDeliverySlot(
-                    ZonedDateTime.parse(orderDTO.getOrderTime().getDeliverySlot()))
+                            ZonedDateTime.parse(orderDTO.getOrderTime().getDeliverySlot()))
                     .setRestaurantAccept(ZonedDateTime.parse(orderDTO.getOrderTime().getRestaurantAccept())));
 
             PriceEntity priceEntity = modelMapper.map(orderDTO.getPrice(), PriceEntity.class);
@@ -226,7 +234,7 @@ public class OrderService implements OrderApi {
         return orderEntity;
     }
 
-    public void insertSampleMenuItems(){
+    public void insertSampleMenuItems() {
         MenuItemEntity menuItemEntity1 = new MenuItemEntity().setName("Sample Item 1").setId(1L).setPrice(5.3f);
         MenuItemEntity menuItemEntity2 = new MenuItemEntity().setName("Sample Item 2").setId(2L).setPrice(3.5f);
         if (!menuItemRepo.findById(1L).isPresent())
