@@ -36,14 +36,6 @@ public class OrderAPITest {
     MockMvc mockMvc;
     ObjectMapper objectMapper = new ObjectMapper();
     @MockBean
-    private MenuItemRepo menuItemRepo;
-    @MockBean
-    private OrderRepo orderRepo;
-    @MockBean
-    private DriverRepo driverRepo;
-    @MockBean
-    private FoodOrderRepo foodOrderRepo;
-    @MockBean
     private RestaurantRepo restaurantRepo;
     @Autowired
     private OrderService orderService;
@@ -56,8 +48,8 @@ public class OrderAPITest {
 
         Order orderDTO = orderService.convertToDTO(orderEntity);
 
-        mockMvc.perform(get("/order"))
-                .andExpect(status().isOk());
+        mockMvc.perform(get("/orders"))
+                .andExpect(status().isUnauthorized());
 
         mockMvc.perform(put("/order").content(objectMapper
                         .writeValueAsString(orderDTO)).contentType(MediaType.APPLICATION_JSON))

@@ -88,8 +88,7 @@ public class OrderService implements OrderApi {
                 .id(String.valueOf(orderEntity.getId())).setAddress(orderEntity.getAddress()));
     }
 
-    @Override
-    public ResponseEntity<List<Order>> getOrder(@ApiParam(value = "if true only returns pending orders") @Valid @RequestParam(value = "active", required = false) Boolean active) {
+    public ResponseEntity<List<Order>> getOrders(@ApiParam(value = "if true only returns pending orders") @Valid @RequestParam(value = "active", required = false) Boolean active) {
 
         Iterable<OrderEntity> orderEntities = orderRepo.findAll();
         List<Order> orderDTOs = new ArrayList<>();
