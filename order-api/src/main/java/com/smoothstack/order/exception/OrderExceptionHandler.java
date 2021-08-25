@@ -1,5 +1,6 @@
 package com.smoothstack.order.exception;
 
+import org.h2.engine.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -51,4 +52,16 @@ public class OrderExceptionHandler {
         );
     }
 
+    @ExceptionHandler (UserNotFoundException.class)
+    @ResponseBody
+    public ResponseEntity<Object> handleUserNotFoundException (UserNotFoundException e){
+        return ResponseEntity.badRequest().body(
+                new OrderException(
+                        e.getMessage(),
+                        e,
+                        HttpStatus.BAD_REQUEST,
+                        ZonedDateTime.now()
+                )
+        );
+    }
 }
