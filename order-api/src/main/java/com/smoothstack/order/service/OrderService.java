@@ -22,12 +22,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.context.request.NativeWebRequest;
 
 import javax.validation.Valid;
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderService implements OrderApi {
@@ -90,14 +92,70 @@ public class OrderService implements OrderApi {
     @Override
     public ResponseEntity<Order> getOrder(@ApiParam(value = "if true only returns pending orders") @Valid @RequestParam(value = "id", required = false) String id) {
 
-//        Iterable<OrderEntity> orderEntities = orderRepo.findAll();
-//        List<Order> orderDTOs = new ArrayList<>();
         Optional<OrderEntity> orderEntity = orderRepo.findById(Long.parseLong(id));
         Order orderDTO = convertToDTO(orderEntity.get());
-//        for (OrderEntity orderEntity : orderEntities)
-//            orderDTOs.add(convertToDTO(orderEntity));
 
         return ResponseEntity.ok(orderDTO);
+    }
+
+
+
+    @Override
+    public ResponseEntity<List<Order>> getActiveOrders(String sortType, Integer page, Integer size) {
+        Iterable<OrderEntity> orderEntities = orderRepo.findAll();
+        List<Order> orderDTOs = new ArrayList<>();
+        for (OrderEntity orderEntity : orderEntities) {
+            // if (orderEntity.getActive() == true)
+                orderDTOs.add(convertToDTO(orderEntity));
+        }
+
+        orderDTOs = sortList(orderDTOs, sortType);
+        orderDTOs = pageList(orderDTOs, page, size);
+
+        return ResponseEntity.ok(orderDTOs);
+    }
+
+    public List<Order> pageList(List<Order> orders, Integer page, Integer size) {
+        if((page + 1) * size > orders.size()) {
+            return orders.subList(page * size, orders.size());
+        }
+        return orders.subList(page * size, (page + 1) * size);
+    }
+
+    public List<Order> sortList(List<Order> orders, String sortType) {
+        switch (sortType != null? sortType : "") {
+            case "time":
+                orders = orders.stream().sorted((x, y) -> sortTime(y.getOrderTime().getDeliverySlot(), x.getOrderTime().getDeliverySlot())).collect(Collectors.toList());
+                break;
+            case "price":
+                orders = orders.stream().sorted((x, y) -> sortPrice(y.getPrice().getTip(), x.getPrice().getTip())).collect(Collectors.toList());
+                break;
+            default:
+                break;
+        }
+        return orders;
+    }
+
+    public Integer sortPrice(BigDecimal price1, BigDecimal price2) {
+        if (price1 == null) {
+            return -1;
+        }
+        if (price2 == null) {
+            return 1;
+        }
+        return price1.compareTo(price2);
+    }
+
+    public Integer sortTime(String time1, String time2) {
+        if (time1 == null) {
+            return -1;
+        }
+        if (time2 == null) {
+            return 1;
+        }
+        ZonedDateTime t1 = ZonedDateTime.parse(time1);
+        ZonedDateTime t2 = ZonedDateTime.parse(time2);
+        return t1.toInstant().compareTo(t2.toInstant());
     }
 
     public OrderEntity createSampleOrder() {
@@ -125,6 +183,13 @@ public class OrderService implements OrderApi {
                 .setItems(foodOrderEntities).setPriceEntity(priceEntity);
 
         return orderRepo.save(orderEntity);
+    }
+
+    @Override
+    public ResponseEntity<Void> patchOrders(Order order) {
+        OrderEntity orderEntity = convertToEntity(order);
+        orderRepo.save(orderEntity);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     public Order convertToDTO(OrderEntity orderEntity) {

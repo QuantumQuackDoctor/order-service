@@ -1,5 +1,6 @@
 package com.smoothstack.order.api;
 
+import com.database.ormlibrary.order.OrderEntity;
 import com.smoothstack.order.model.CreateResponse;
 import com.smoothstack.order.model.Order;
 import com.smoothstack.order.service.OrderService;
@@ -38,8 +39,18 @@ public class OrderApiController implements OrderApi {
 
     @Override
     @PreAuthorize("permitAll()")
-    public ResponseEntity<Order> getOrder(@ApiParam(value = "if true only returns pending orders") @Valid @RequestParam(value = "id", required = false) String id){
+    public ResponseEntity<Order> getOrder(@ApiParam(value = "") @Valid @RequestParam(value = "id", required = false) String id){
         return orderService.getOrder(id);
+    }
+
+    @Override
+    public ResponseEntity<Void> patchOrders(Order order) {
+        return orderService.patchOrders(order);
+    }
+
+    @Override
+    public ResponseEntity<List<Order>> getActiveOrders(String sortType, Integer page, Integer size) {
+        return orderService.getActiveOrders(sortType, page, size);
     }
 
     @Override
@@ -57,8 +68,8 @@ public class OrderApiController implements OrderApi {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    /*    @PutMapping(path = "/order/sample")
-    public ResponseEntity<CreateResponse> addSampleOrder (){
+    @PutMapping(path = "/order/sample")
+    public ResponseEntity<OrderEntity> addSampleOrder (){
         return ResponseEntity.ok(orderService.createSampleOrder());
-    }*/
+    }
 }

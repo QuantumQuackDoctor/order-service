@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.NativeWebRequest;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import java.util.Optional;
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2021-06-30T22:53:09.076567700-06:00[America/Denver]")
 @Validated
@@ -100,36 +101,36 @@ public interface OrderApi {
     }
 
 
-    /**
-     * PUT /order/driver : Driver Accept Orders
-     * Accepts order
-     *
-     * @param requestBody Array of order id&#39;s to accept (optional)
-     * @return Orders Accepted (status code 200)
-     *         or Orders can&#39;t be accepted together (status code 400)
-     *         or Access token is missing or invalid (status code 401)
-     *         or Forbidden (status code 403)
-     *         or Order not found (status code 404)
-     */
-    @ApiOperation(value = "Driver Accept Orders", nickname = "driverAcceptOrders", notes = "Accepts order", authorizations = {
-        
-        @Authorization(value = "JWT")
-         }, tags={ "order", })
-    @ApiResponses(value = { 
-        @ApiResponse(code = 200, message = "Orders Accepted"),
-        @ApiResponse(code = 400, message = "Orders can't be accepted together", response = String.class, responseContainer = "List"),
-        @ApiResponse(code = 401, message = "Access token is missing or invalid", response = String.class),
-        @ApiResponse(code = 403, message = "Forbidden"),
-        @ApiResponse(code = 404, message = "Order not found", response = String.class, responseContainer = "List") })
-    @PutMapping(
-        value = "/order/driver",
-        produces = { "application/json" },
-        consumes = { "application/json" }
-    )
-    default ResponseEntity<Void> driverAcceptOrders(@ApiParam(value = "Array of order id's to accept"  )  @Valid @RequestBody(required = false) List<String> requestBody) {
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
-
-    }
+//    /**
+//     * PUT /order/driver : Driver Accept Orders
+//     * Accepts order
+//     *
+//     * @param requestBody Array of order id&#39;s to accept (optional)
+//     * @return Orders Accepted (status code 200)
+//     *         or Orders can&#39;t be accepted together (status code 400)
+//     *         or Access token is missing or invalid (status code 401)
+//     *         or Forbidden (status code 403)
+//     *         or Order not found (status code 404)
+//     */
+//    @ApiOperation(value = "Driver Accept Orders", nickname = "driverAcceptOrders", notes = "Accepts order", authorizations = {
+//
+//        @Authorization(value = "JWT")
+//         }, tags={ "order", })
+//    @ApiResponses(value = {
+//        @ApiResponse(code = 200, message = "Orders Accepted"),
+//        @ApiResponse(code = 400, message = "Orders can't be accepted together", response = String.class, responseContainer = "List"),
+//        @ApiResponse(code = 401, message = "Access token is missing or invalid", response = String.class),
+//        @ApiResponse(code = 403, message = "Forbidden"),
+//        @ApiResponse(code = 404, message = "Order not found", response = String.class, responseContainer = "List") })
+//    @PutMapping(
+//        value = "/order/driver",
+//        produces = { "application/json" },
+//        consumes = { "application/json" }
+//    )
+//    default ResponseEntity<Void> driverAcceptOrders(@ApiParam(value = "Array of order id's to accept"  )  @Valid @RequestBody(required = false) List<String> requestBody) {
+//        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+//
+//    }
 
 
     /**
@@ -242,7 +243,7 @@ public interface OrderApi {
      *         or Forbidden (status code 403)
      *         or restaurant/item not found (status code 404)
      */
-    @ApiOperation(value = "Get orders", nickname = "getOrder", notes = "Returns authenticated users orders, server will check ensure deliveryslot is valid for all chosen restaurants", response = Order.class, responseContainer = "List", tags={ "order", })
+    @ApiOperation(value = "Get an order", nickname = "getOrder", notes = "Returns a user order", response = Order.class, responseContainer = "List", tags={ "order", })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "OK", response = Order.class, responseContainer = "List"),
         @ApiResponse(code = 400, message = "Invalid deliverySlot"),
@@ -254,6 +255,51 @@ public interface OrderApi {
         produces = { "application/json", "application/xml" }
     )
     default ResponseEntity<Order> getOrder(@ApiParam(value = "") @Valid @RequestParam(value = "id", required = true) String id) {
+        getRequest().ifPresent(request -> {
+            for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
+                if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
+                    String exampleString = "{ \"orderType\" : \"delivery\", \"driverNote\" : \"driverNote\", \"address\" : \"address\", \"orderTime\" : { \"driverAccept\" : \"2021-02-10T00:00:00.000Z\", \"orderPlaced\" : \"2021-02-10T00:00:00.000Z\", \"deliverySlot\" : \"2021-02-10T00:00:00.000Z\", \"restaurantStart\" : \"2021-02-10T00:00:00.000Z\", \"delivered\" : \"2021-02-10T00:00:00.000Z\", \"restaurantAccept\" : \"2021-02-10T00:00:00.000Z\", \"restaurantComplete\" : \"2021-02-10T00:00:00.000Z\" }, \"driverId\" : \"driverId\", \"price\" : { \"delivery\" : 6.027456183070403, \"tip\" : 1.4658129805029452, \"food\" : 0.8008281904610115 }, \"refunded\" : true, \"id\" : \"id\", \"restaurantId\" : \"restaurantId\", \"food\" : [ { \"restaurantId\" : \"restaurantId\", \"items\" : [ { \"configurations\" : [ \"configurations\", \"configurations\" ], \"name\" : \"name\" }, { \"configurations\" : [ \"configurations\", \"configurations\" ], \"name\" : \"name\" } ] }, { \"restaurantId\" : \"restaurantId\", \"items\" : [ { \"configurations\" : [ \"configurations\", \"configurations\" ], \"name\" : \"name\" }, { \"configurations\" : [ \"configurations\", \"configurations\" ], \"name\" : \"name\" } ] } ] }";
+                    ApiUtil.setExampleResponse(request, "application/json", exampleString);
+                    break;
+                }
+                if (mediaType.isCompatibleWith(MediaType.valueOf("application/xml"))) {
+                    String exampleString = "<null> <id>aeiou</id> <orderType>aeiou</orderType> <driverId>aeiou</driverId> <restaurantId>aeiou</restaurantId> <driverNote>aeiou</driverNote> <address>aeiou</address> <refunded>true</refunded> </null>";
+                    ApiUtil.setExampleResponse(request, "application/xml", exampleString);
+                    break;
+                }
+            }
+        });
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+
+    }
+
+
+    /**
+     * GET /order : Get orders
+     * Returns orders
+     *
+     * @return OK (status code 200)
+     *         or Invalid deliverySlot (status code 400)
+     *         or Access token is missing or invalid (status code 401)
+     *         or Forbidden (status code 403)
+     *         or restaurant/item not found (status code 404)
+     */
+    @ApiOperation(value = "Get actiive orders", nickname = "getActiveOrders", notes = "A list of active orders", response = Order.class, responseContainer = "List", tags={ "order", })
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK", response = Order.class, responseContainer = "List"),
+            @ApiResponse(code = 400, message = "Invalid deliverySlot"),
+            @ApiResponse(code = 401, message = "Access token is missing or invalid", response = String.class),
+            @ApiResponse(code = 403, message = "Forbidden"),
+            @ApiResponse(code = 404, message = "restaurant/item not found") })
+    @GetMapping(
+            path = "/orders/driver",
+            produces = { "application/json", "application/xml" }
+    )
+    default ResponseEntity<List<Order>> getActiveOrders(
+            @RequestParam(value = "sort_type", required = false) @Valid @ApiParam("type of sort") String sortType,
+            @RequestParam(value = "page", required = false) @Valid @ApiParam("page to return indexed by 0") @Min(0) Integer page,
+            @RequestParam(value = "size", required = false) @Valid @ApiParam("items in page") @Min(1) Integer size)
+    {
         getRequest().ifPresent(request -> {
             for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
@@ -330,6 +376,36 @@ public interface OrderApi {
         consumes = { "application/json" }
     )
     default ResponseEntity<Void> updateOrderConfigurations(@ApiParam(value = ""  )  @Valid @RequestBody(required = false) InlineObject inlineObject) {
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+
+    }
+
+
+    /**
+     * PATCH /orders : Admin Update Order
+     * Update order, use this to connect orders with drivers (set driverId)
+     *
+     * @param order Order to update, non null properties will be updated, id necessary (optional)
+     * @return Update successful (status code 200)
+     *         or Access token is missing or invalid (status code 401)
+     *         or Forbidden (status code 403)
+     *         or Not Found (status code 404)
+     */
+    @ApiOperation(value = "Admin Update Order", nickname = "patchOrders", notes = "Update order, use this to connect orders with drivers (set driverId)", authorizations = {
+
+            @Authorization(value = "JWT")
+    }, tags={ "order", })
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Update successful"),
+            @ApiResponse(code = 401, message = "Access token is missing or invalid", response = String.class),
+            @ApiResponse(code = 403, message = "Forbidden"),
+            @ApiResponse(code = 404, message = "Not Found") })
+    @PatchMapping(
+            value = "/orders",
+            produces = { "application/json" },
+            consumes = { "application/json" }
+    )
+    default ResponseEntity<Void> patchOrders(@ApiParam(value = "Order to update, non null properties will be updated, id necessary"  )  @Valid @RequestBody(required = false) Order order) {
         return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
 
     }
