@@ -13,6 +13,9 @@ import com.smoothstack.order.model.*;
 import com.smoothstack.order.repo.*;
 import io.swagger.annotations.ApiParam;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -53,13 +56,17 @@ public class OrderService implements OrderApi {
         return OrderApi.super.getRequest();
     }
 
-    public void deleteOrder(Long id) {
+    @Override
+    public ResponseEntity<Void> deleteOrder(Long id){
         OrderEntity orderEntity = orderRepo.findById(id).isPresent() ?
                 orderRepo.findById(id).get() : null;
-        if (orderEntity == null) return;
-        List<FoodOrderEntity> foodOrderEntityList = orderEntity.getItems();
-        foodOrderRepo.deleteAll(foodOrderEntityList);
+        if (orderEntity == null) return new ResponseEntity<>(HttpStatus.OK);
+        List <FoodOrderEntity> foodOrderEntityList = orderEntity.getItems();
+        for (FoodOrderEntity foodOrderEntity : foodOrderEntityList)
+            foodOrderRepo.delete(foodOrderEntity);
         orderRepo.deleteById(id);
+
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     public ResponseEntity<CreateResponse> createOrder(Order orderDTO,
@@ -85,15 +92,18 @@ public class OrderService implements OrderApi {
                 .id(String.valueOf(orderEntity.getId())).setAddress(orderEntity.getAddress()));
     }
 
-    public ResponseEntity<List<Order>> getOrders(@ApiParam(value = "if true only returns pending orders") @Valid @RequestParam(value = "active", required = false) Boolean active) {
 
-        Iterable<OrderEntity> orderEntities = orderRepo.findAll();
-        List<Order> orderDTOs = new ArrayList<>();
+    @Override
+    public ResponseEntity<Order> getOrder(@ApiParam(value = "if true only returns pending orders") @Valid @RequestParam(value = "id", required = false) String id) {
 
-        for (OrderEntity orderEntity : orderEntities)
-            orderDTOs.add(convertToDTO(orderEntity));
+//        Iterable<OrderEntity> orderEntities = orderRepo.findAll();
+//        List<Order> orderDTOs = new ArrayList<>();
+        Optional<OrderEntity> orderEntity = orderRepo.findById(Long.parseLong(id));
+        Order orderDTO = convertToDTO(orderEntity.get());
+//        for (OrderEntity orderEntity : orderEntities)
+//            orderDTOs.add(convertToDTO(orderEntity));
 
-        return ResponseEntity.ok(orderDTOs);
+        return ResponseEntity.ok(orderDTO);
     }
 
     public List<Order> getUserOrders(Long userId) throws UserNotFoundException {

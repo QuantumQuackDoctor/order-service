@@ -78,6 +78,30 @@ public interface OrderApi {
 
     }
 
+    /**
+     * PUT /order : Create order
+     * Create new order, sends back checkout session data. Payment intent will be canceled in 5 minutes if not paid. (Server note: use stripe webhooks to update payment status)
+     *
+     * @param order  (optional)
+     * @return OK (status code 200)
+     *         or Access token is missing or invalid (status code 401)
+     *         or Forbidden (status code 403)
+     */
+    @ApiOperation(value = "Delete order", nickname = "deleteOrder", notes = "Delete order by id",
+            response = CreateResponse.class, tags={ "order", })
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK", response = CreateResponse.class),
+            @ApiResponse(code = 401, message = "Access token is missing or invalid", response = String.class),
+            @ApiResponse(code = 403, message = "Forbidden") })
+    @DeleteMapping(
+            path = "/order",
+            produces = { "application/json", "application/xml" }
+    )
+    default ResponseEntity<Void> deleteOrder(@ApiParam(value = "id"  )  @Valid @RequestParam(value = "id", required = true) String id) {
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+
+    }
+
 
     /**
      * PUT /order/driver : Driver Accept Orders
@@ -212,9 +236,9 @@ public interface OrderApi {
 
     /**
      * GET /order : Get orders
-     * Returns authenticated users orders, server will check ensure deliveryslot is valid for all chosen restaurants
+     * Returns order by id
      *
-     * @param active if true only returns pending orders (optional)
+     * @param id order id
      * @return OK (status code 200)
      *         or Invalid deliverySlot (status code 400)
      *         or Access token is missing or invalid (status code 401)
@@ -232,7 +256,7 @@ public interface OrderApi {
         path = "/order",
         produces = { "application/json", "application/xml" }
     )
-    default ResponseEntity<List<Order>> getOrder(@ApiParam(value = "if true only returns pending orders") @Valid @RequestParam(value = "active", required = false) Boolean active) {
+    default ResponseEntity<Order> getOrder(@ApiParam(value = "") @Valid @RequestParam(value = "id", required = true) String id) {
         getRequest().ifPresent(request -> {
             for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
