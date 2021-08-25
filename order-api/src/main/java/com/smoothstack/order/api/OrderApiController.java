@@ -13,12 +13,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.NativeWebRequest;
 
+import javax.validation.Valid;
 import java.util.List;
 import java.util.Optional;
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2021-06-30T22:53:09.076567700-06:00[America/Denver]")
@@ -41,11 +39,11 @@ public class OrderApiController implements OrderApi {
         return Optional.ofNullable(request);
     }
 
-    @Override
-    @PreAuthorize("permitAll()")
-    public ResponseEntity<Order> getOrder(@ApiParam(value = "if true only returns pending orders") @Valid @RequestParam(value = "id", required = false) String id){
+/*    @Override
+    @PreAuthorize("hasAuthority('admin')")
+    public ResponseEntity<Order> getOrder(@ApiParam(value = "if true only returns pending orders") @Valid @RequestParam(value = "id", required = false) Long id){
         return orderService.getOrder(id);
-    }
+    }*/
 
     @Override
     @PreAuthorize("hasAuthority('user')")
@@ -66,11 +64,8 @@ public class OrderApiController implements OrderApi {
         return ResponseEntity.ok (orderService.getUserOrders (authDetails.getId()));
     }
 
-       return orderService.createOrder(order);
-    }
-
     @Override
-    public ResponseEntity<Void> deleteOrder(String id) {
+    public ResponseEntity<Void> deleteOrder(Long id) {
         orderService.deleteOrder(id);
         return new ResponseEntity<>(HttpStatus.OK);
     }

@@ -48,9 +48,6 @@ public class OrderAPITest {
 
         Order orderDTO = orderService.convertToDTO(orderEntity);
 
-        mockMvc.perform(get("/orders"))
-                .andExpect(status().isUnauthorized());
-
         mockMvc.perform(put("/order").content(objectMapper
                         .writeValueAsString(orderDTO)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());

@@ -33,14 +33,4 @@ public class OrdersApiController implements OrdersApi {
         return Optional.ofNullable(request);
     }
 
-    @Override
-    @PreAuthorize("hasAuthority('admin')")
-    public ResponseEntity<List<Order>> getOrders(@ApiParam(value = "filters active orders") @Valid @RequestParam(value = "active", required = false) Boolean active,
-                                                 @ApiParam(value = "filters by userId") @Valid @RequestParam(value = "userId", required = false) String userId,
-                                                 @ApiParam(value = ">= price") @Valid @RequestParam(value = "price", required = false) BigDecimal price,
-                                                 @ApiParam(value = "price becomes <=") @Valid @RequestParam(value = "invertPrice", required = false) Boolean invertPrice,
-                                                 @ApiParam(value = "matches paymentStatus") @Valid @RequestParam(value = "paymentStatus", required = false) String paymentStatus) {
-        return orderService.getOrders(true);
-    }
-
 }
