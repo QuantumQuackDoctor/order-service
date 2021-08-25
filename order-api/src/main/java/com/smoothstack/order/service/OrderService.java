@@ -6,16 +6,15 @@ import com.database.ormlibrary.order.OrderEntity;
 import com.database.ormlibrary.order.OrderTimeEntity;
 import com.database.ormlibrary.order.PriceEntity;
 import com.database.ormlibrary.user.UserEntity;
+import com.smoothstack.order.api.OrderApi;
+import com.smoothstack.order.exception.OrderTimeException;
 import com.smoothstack.order.exception.UserNotFoundException;
 import com.smoothstack.order.model.*;
 import com.smoothstack.order.repo.*;
-import com.smoothstack.order.api.OrderApi;
-import com.smoothstack.order.exception.OrderTimeException;
 import io.swagger.annotations.ApiParam;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.context.request.NativeWebRequest;
 
@@ -54,19 +53,17 @@ public class OrderService implements OrderApi {
         return OrderApi.super.getRequest();
     }
 
-    public void deleteOrder(Long id){
+    public void deleteOrder(Long id) {
         OrderEntity orderEntity = orderRepo.findById(id).isPresent() ?
                 orderRepo.findById(id).get() : null;
         if (orderEntity == null) return;
-        List <FoodOrderEntity> foodOrderEntityList = orderEntity.getItems();
+        List<FoodOrderEntity> foodOrderEntityList = orderEntity.getItems();
         foodOrderRepo.deleteAll(foodOrderEntityList);
         orderRepo.deleteById(id);
     }
 
-    @Override
-    public ResponseEntity<CreateResponse> createOrder(@ApiParam()
-                                                      @RequestBody(required = false) Order orderDTO,
-                                                      @RequestParam(value = "userId") Long userId) throws OrderTimeException, UserNotFoundException {
+    public ResponseEntity<CreateResponse> createOrder(Order orderDTO,
+                                                      Long userId) throws OrderTimeException, UserNotFoundException {
         OrderEntity orderEntity = convertToEntity(orderDTO);
         orderEntity.setActive(true);
         if (orderEntity.getDelivery()) {
@@ -77,10 +74,10 @@ public class OrderService implements OrderApi {
         }
 
 
-        Optional <UserEntity> userEntityOptional = userRepo.findById(userId);
-        if (userEntityOptional.isPresent()){
+        Optional<UserEntity> userEntityOptional = userRepo.findById(userId);
+        if (userEntityOptional.isPresent()) {
             userEntityOptional.get().getOrderList().add(orderEntity);
-        }else{
+        } else {
             throw new UserNotFoundException("User not found.");
         }
         orderRepo.save(orderEntity);

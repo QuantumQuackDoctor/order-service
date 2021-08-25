@@ -21,6 +21,7 @@ import io.swagger.annotations.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -58,7 +59,7 @@ public interface OrderApi {
         consumes = { "application/json", "application/xml" }
     )
     default ResponseEntity<CreateResponse> createOrder(@ApiParam(value = ""  )  @Valid @RequestBody(required = false) Order order,
-                                                       @Valid @RequestParam (value = "userId") Long userId) throws EmptyCartException, MissingFieldsException, OrderTimeException, UserNotFoundException {
+                                                       Authentication authentication) throws EmptyCartException, MissingFieldsException, OrderTimeException, UserNotFoundException {
         getRequest().ifPresent(request -> {
             for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {

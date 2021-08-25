@@ -53,7 +53,7 @@ public class OrderAPITest {
 
         mockMvc.perform(put("/order").content(objectMapper
                         .writeValueAsString(orderDTO)).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isUnauthorized());
     }
 
     public OrderEntity getSampleOrder() {

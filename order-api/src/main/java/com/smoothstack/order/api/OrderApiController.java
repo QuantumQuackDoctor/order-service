@@ -11,7 +11,10 @@ import com.smoothstack.order.service.OrderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.NativeWebRequest;
 
 import java.util.List;
@@ -38,12 +41,13 @@ public class OrderApiController implements OrderApi {
 
     @Override
     @PreAuthorize("hasAuthority('user')")
-    public ResponseEntity<CreateResponse> createOrder(Order order, Long userId) throws MissingFieldsException, EmptyCartException, OrderTimeException, UserNotFoundException {
+    public ResponseEntity<CreateResponse> createOrder(Order order, Authentication authentication) throws MissingFieldsException, EmptyCartException, OrderTimeException, UserNotFoundException {
        if (!order.checkRequiredFields())
             throw new MissingFieldsException("Missing require fields");
        if (order.getFood().size() == 0)
            throw new EmptyCartException("No items in cart.");
-        return orderService.createOrder(order, userId);
+        AuthDetails autheDetails = (AuthDetails) authentication.getPrincipal();
+        return orderService.createOrder(order, autheDetails.getId());
     }
 
 
