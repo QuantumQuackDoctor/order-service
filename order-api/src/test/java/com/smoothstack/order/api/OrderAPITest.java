@@ -1,6 +1,7 @@
 package com.smoothstack.order.api;
 
 import com.database.ormlibrary.food.MenuItemEntity;
+import com.database.ormlibrary.food.RestaurantEntity;
 import com.database.ormlibrary.order.FoodOrderEntity;
 import com.database.ormlibrary.order.OrderEntity;
 import com.database.ormlibrary.order.OrderTimeEntity;
@@ -10,6 +11,7 @@ import com.smoothstack.order.model.Order;
 import com.smoothstack.order.repo.*;
 import com.smoothstack.order.service.OrderService;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,6 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -33,14 +36,6 @@ public class OrderAPITest {
     MockMvc mockMvc;
     ObjectMapper objectMapper = new ObjectMapper();
     @MockBean
-    private MenuItemRepo menuItemRepo;
-    @MockBean
-    private OrderRepo orderRepo;
-    @MockBean
-    private DriverRepo driverRepo;
-    @MockBean
-    private FoodOrderRepo foodOrderRepo;
-    @MockBean
     private RestaurantRepo restaurantRepo;
     @Autowired
     private OrderService orderService;
@@ -48,14 +43,14 @@ public class OrderAPITest {
     @Test
     void apiTest() throws Exception {
         OrderEntity orderEntity = getSampleOrder();
-        Order orderDTO = orderService.convertToDTO(orderEntity);
 
-//        mockMvc.perform(get("/order"))
-//                .andExpect(status().isBadRequest());
+        Mockito.when (restaurantRepo.findById(Mockito.any())).thenReturn(Optional.of (new RestaurantEntity().setName("Sample Restaurant")));
+
+        Order orderDTO = orderService.convertToDTO(orderEntity);
 
         mockMvc.perform(put("/order").content(objectMapper
                         .writeValueAsString(orderDTO)).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isUnauthorized());
     }
 
     public OrderEntity getSampleOrder() {
