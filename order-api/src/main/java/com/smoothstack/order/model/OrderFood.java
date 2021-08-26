@@ -1,5 +1,6 @@
 package com.smoothstack.order.model;
 
+import java.util.Map;
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
@@ -15,12 +16,21 @@ public class OrderFood   {
   @JsonProperty("restaurantId")
   private String restaurantId;
 
+  @JsonProperty("restaurantName")
+  private String restaurantName;
+
   @JsonProperty("items")
   @Valid
   private List<OrderItems> items = null;
 
-  public OrderFood restaurantId(String restaurantId) {
-    this.restaurantId = restaurantId;
+  @ApiModelProperty(value = "")
+
+  public String getRestaurantName() {
+    return restaurantName;
+  }
+
+  public OrderFood setRestaurantName(String restaurantName) {
+    this.restaurantName = restaurantName;
     return this;
   }
 
