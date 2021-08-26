@@ -60,12 +60,18 @@ public class OrderService implements OrderApi {
     }
 
     @Override
-    public ResponseEntity<Void> deleteOrder(String idString){
+    public ResponseEntity<Void> deleteOrder(String idString) throws ValueNotPresentException {
         Long id = Long.parseLong(idString);
         OrderEntity orderEntity = orderRepo.findById(id).isPresent() ?
                 orderRepo.findById(id).get() : null;
+        List<FoodOrderEntity> foodOrderEntityList;
         if (orderEntity == null) new ResponseEntity<>(HttpStatus.OK);
-        List <FoodOrderEntity> foodOrderEntityList = orderEntity.getItems();
+        try {
+            foodOrderEntityList = orderEntity.getItems();
+        } catch (Exception e) {
+            throw new ValueNotPresentException("no value present");
+        }
+
         for (FoodOrderEntity foodOrderEntity : foodOrderEntityList)
             foodOrderRepo.delete(foodOrderEntity);
         orderRepo.deleteById(id);
@@ -94,10 +100,14 @@ public class OrderService implements OrderApi {
     public ResponseEntity<Order> getOrder(@ApiParam(value = "if true only returns pending orders") @Valid @RequestParam(value = "id", required = false) String id) throws ValueNotPresentException {
 
         Optional<OrderEntity> orderEntity = orderRepo.findById(Long.parseLong(id));
-        if (orderEntity.isPresent()) {
+        Order orderDTO = new Order();
+
+        try {
+            orderDTO = convertToDTO(orderEntity.get());
+        } catch (Exception e) {
             throw new ValueNotPresentException("No item of that id in the database");
         }
-        Order orderDTO = convertToDTO(orderEntity.get());
+
 
         return ResponseEntity.ok(orderDTO);
     }

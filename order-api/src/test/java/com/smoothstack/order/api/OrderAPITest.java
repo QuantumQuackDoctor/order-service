@@ -26,6 +26,8 @@ import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -52,11 +54,18 @@ public class OrderAPITest {
         Order orderDTO = orderService.convertToDTO(orderEntity);
 
         mockMvc.perform(get("/order").param("id", "1"))
-                .andExpect(status().is4xxClientError());
+                .andExpect(status().isBadRequest());
 
         mockMvc.perform(put("/order").content(objectMapper
                         .writeValueAsString(orderDTO)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
+
+        mockMvc.perform(patch("/orders").content(objectMapper
+                .writeValueAsString(orderDTO)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(delete("/order").param("id","1"))
+                .andExpect(status().isBadRequest());
     }
 
     public OrderEntity getSampleOrder() {

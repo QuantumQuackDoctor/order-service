@@ -64,7 +64,7 @@ public class OrderApiController implements OrderApi {
     }
 
     @Override
-    public ResponseEntity<Void> deleteOrder(String id) {
+    public ResponseEntity<Void> deleteOrder(String id) throws ValueNotPresentException {
         orderService.deleteOrder(id);
         return new ResponseEntity<>(HttpStatus.OK);
     }

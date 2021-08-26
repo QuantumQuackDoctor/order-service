@@ -96,7 +96,7 @@ public interface OrderApi {
             path = "/order",
             produces = { "application/json", "application/xml" }
     )
-    default ResponseEntity<Void> deleteOrder(@ApiParam(value = "id"  )  @Valid @RequestParam(value = "id", required = true) String id) {
+    default ResponseEntity<Void> deleteOrder(@ApiParam(value = "id"  )  @Valid @RequestParam(value = "id", required = true) String id) throws ValueNotPresentException {
         return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
 
     }
@@ -161,6 +161,8 @@ public interface OrderApi {
         return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
 
     }
+
+
 
 
     /**
