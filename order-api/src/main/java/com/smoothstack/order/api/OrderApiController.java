@@ -1,6 +1,7 @@
 package com.smoothstack.order.api;
 
 import com.database.ormlibrary.order.OrderEntity;
+import com.smoothstack.order.exception.ValueNotPresentException;
 import com.smoothstack.order.model.CreateResponse;
 import com.smoothstack.order.model.Order;
 import com.smoothstack.order.service.OrderService;
@@ -39,7 +40,7 @@ public class OrderApiController implements OrderApi {
 
     @Override
     @PreAuthorize("permitAll()")
-    public ResponseEntity<Order> getOrder(@ApiParam(value = "") @Valid @RequestParam(value = "id", required = false) String id){
+    public ResponseEntity<Order> getOrder(@ApiParam(value = "") @Valid @RequestParam(value = "id", required = false) String id) throws ValueNotPresentException {
         return orderService.getOrder(id);
     }
 

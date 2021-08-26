@@ -42,8 +42,6 @@ class OrderServiceTest {
 
         CreateResponse insertedResponse = (CreateResponse) orderService.createOrder(orderDTO).getBody();
 
-
-
         assertEquals (orderDTO.getAddress(), insertedResponse.getAddress());
 
         OrderOrderTime newDeliveryTime = orderDTO.getOrderTime();
@@ -53,8 +51,6 @@ class OrderServiceTest {
         orderDTO.setOrderTime(newDeliveryTime);
 
         assertThrows (OrderTimeException.class, () -> {orderService.createOrder(orderDTO);});
-
-
 
     }
 

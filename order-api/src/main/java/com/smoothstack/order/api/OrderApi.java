@@ -7,6 +7,7 @@ package com.smoothstack.order.api;
 
 import java.math.BigDecimal;
 
+import com.smoothstack.order.exception.ValueNotPresentException;
 import com.smoothstack.order.model.InlineObject;
 import com.smoothstack.order.model.InlineObject1;
 import com.smoothstack.order.model.InlineObject2;
@@ -254,7 +255,7 @@ public interface OrderApi {
         path = "/order",
         produces = { "application/json", "application/xml" }
     )
-    default ResponseEntity<Order> getOrder(@ApiParam(value = "") @Valid @RequestParam(value = "id", required = true) String id) {
+    default ResponseEntity<Order> getOrder(@ApiParam(value = "") @Valid @RequestParam(value = "id", required = true) String id) throws ValueNotPresentException {
         getRequest().ifPresent(request -> {
             for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
@@ -310,38 +311,6 @@ public interface OrderApi {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/xml"))) {
                     String exampleString = "<null> <id>aeiou</id> <orderType>aeiou</orderType> <driverId>aeiou</driverId> <restaurantId>aeiou</restaurantId> <driverNote>aeiou</driverNote> <address>aeiou</address> <refunded>true</refunded> </null>";
                     ApiUtil.setExampleResponse(request, "application/xml", exampleString);
-                    break;
-                }
-            }
-        });
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
-
-    }
-
-
-    /**
-     * POST /order/driver : Driver Get Available Orders
-     * Returns all available orders for driver (uses geolocation)
-     *
-     * @param tip (&gt;&#x3D;) tip (optional)
-     * @param distance &lt;&#x3D; distance (miles) (optional)
-     * @param inlineObject1  (optional)
-     * @return OK (status code 200)
-     */
-    @ApiOperation(value = "Driver Get Available Orders", nickname = "postOrderDriver", notes = "Returns all available orders for driver (uses geolocation)", response = Order.class, responseContainer = "List", tags={ "order", })
-    @ApiResponses(value = { 
-        @ApiResponse(code = 200, message = "OK", response = Order.class, responseContainer = "List") })
-    @PostMapping(
-        value = "/order/driver",
-        produces = { "application/json" },
-        consumes = { "application/json" }
-    )
-    default ResponseEntity<List<Order>> postOrderDriver(@ApiParam(value = "(>=) tip") @Valid @RequestParam(value = "tip", required = false) BigDecimal tip,@ApiParam(value = "<= distance (miles)") @Valid @RequestParam(value = "distance", required = false) BigDecimal distance,@ApiParam(value = ""  )  @Valid @RequestBody(required = false) InlineObject1 inlineObject1) {
-        getRequest().ifPresent(request -> {
-            for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
-                if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                    String exampleString = "{ \"orderType\" : \"delivery\", \"driverNote\" : \"driverNote\", \"address\" : \"address\", \"orderTime\" : { \"driverAccept\" : \"2021-02-10T00:00:00.000Z\", \"orderPlaced\" : \"2021-02-10T00:00:00.000Z\", \"deliverySlot\" : \"2021-02-10T00:00:00.000Z\", \"restaurantStart\" : \"2021-02-10T00:00:00.000Z\", \"delivered\" : \"2021-02-10T00:00:00.000Z\", \"restaurantAccept\" : \"2021-02-10T00:00:00.000Z\", \"restaurantComplete\" : \"2021-02-10T00:00:00.000Z\" }, \"driverId\" : \"driverId\", \"price\" : { \"delivery\" : 6.027456183070403, \"tip\" : 1.4658129805029452, \"food\" : 0.8008281904610115 }, \"refunded\" : true, \"id\" : \"id\", \"restaurantId\" : \"restaurantId\", \"food\" : [ { \"restaurantId\" : \"restaurantId\", \"items\" : [ { \"configurations\" : [ \"configurations\", \"configurations\" ], \"name\" : \"name\" }, { \"configurations\" : [ \"configurations\", \"configurations\" ], \"name\" : \"name\" } ] }, { \"restaurantId\" : \"restaurantId\", \"items\" : [ { \"configurations\" : [ \"configurations\", \"configurations\" ], \"name\" : \"name\" }, { \"configurations\" : [ \"configurations\", \"configurations\" ], \"name\" : \"name\" } ] } ] }";
-                    ApiUtil.setExampleResponse(request, "application/json", exampleString);
                     break;
                 }
             }

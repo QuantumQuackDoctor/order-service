@@ -6,6 +6,7 @@ import com.database.ormlibrary.order.OrderEntity;
 import com.database.ormlibrary.order.OrderTimeEntity;
 import com.database.ormlibrary.order.PriceEntity;
 import com.smoothstack.order.exception.OrderExceptionHandler;
+import com.smoothstack.order.exception.ValueNotPresentException;
 import com.smoothstack.order.model.*;
 import com.smoothstack.order.repo.*;
 import com.smoothstack.order.api.OrderApi;
@@ -90,9 +91,12 @@ public class OrderService implements OrderApi {
     }
 
     @Override
-    public ResponseEntity<Order> getOrder(@ApiParam(value = "if true only returns pending orders") @Valid @RequestParam(value = "id", required = false) String id) {
+    public ResponseEntity<Order> getOrder(@ApiParam(value = "if true only returns pending orders") @Valid @RequestParam(value = "id", required = false) String id) throws ValueNotPresentException {
 
         Optional<OrderEntity> orderEntity = orderRepo.findById(Long.parseLong(id));
+        if (orderEntity.isPresent()) {
+            throw new ValueNotPresentException("No item of that id in the database");
+        }
         Order orderDTO = convertToDTO(orderEntity.get());
 
         return ResponseEntity.ok(orderDTO);
@@ -105,7 +109,7 @@ public class OrderService implements OrderApi {
         Iterable<OrderEntity> orderEntities = orderRepo.findAll();
         List<Order> orderDTOs = new ArrayList<>();
         for (OrderEntity orderEntity : orderEntities) {
-            // if (orderEntity.getActive() == true)
+             if (orderEntity.getRefunded() == null || orderEntity.getRefunded() == false )
                 orderDTOs.add(convertToDTO(orderEntity));
         }
 
