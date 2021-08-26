@@ -6,6 +6,7 @@ import com.database.ormlibrary.order.OrderEntity;
 import com.database.ormlibrary.order.OrderTimeEntity;
 import com.database.ormlibrary.order.PriceEntity;
 import com.smoothstack.order.Main;
+import com.smoothstack.order.exception.ValueNotPresentException;
 import com.smoothstack.order.model.CreateResponse;
 import com.smoothstack.order.model.Order;
 import com.smoothstack.order.model.OrderOrderTime;
@@ -52,6 +53,26 @@ class OrderServiceTest {
 
         assertThrows (OrderTimeException.class, () -> {orderService.createOrder(orderDTO);});
 
+    }
+
+    @Test
+    void createDeleteOrderTest() throws OrderTimeException, ValueNotPresentException {
+        OrderEntity orderEntity = getSampleOrder();
+
+        orderService.insertSampleMenuItems();
+
+        Order orderDTO = orderService.convertToDTO(orderEntity);
+
+        CreateResponse insertedResponse = (CreateResponse) orderService.createOrder(orderDTO).getBody();
+
+        assertEquals (orderDTO.getAddress(), insertedResponse.getAddress());
+
+        String id = insertedResponse.getId();
+
+
+        orderService.deleteOrder(id);
+
+        assertThrows (ValueNotPresentException.class, () -> orderService.getOrder(id));
     }
 
     public OrderEntity getSampleOrder(){

@@ -72,8 +72,8 @@ public class OrderService implements OrderApi {
             throw new ValueNotPresentException("no value present");
         }
 
-        for (FoodOrderEntity foodOrderEntity : foodOrderEntityList)
-            foodOrderRepo.delete(foodOrderEntity);
+//        for (FoodOrderEntity foodOrderEntity : foodOrderEntityList)
+//            foodOrderRepo.delete(foodOrderEntity);
         orderRepo.deleteById(id);
 
         return new ResponseEntity<>(HttpStatus.OK);
