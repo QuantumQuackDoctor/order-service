@@ -1,22 +1,14 @@
-   def getDockerTag() {
-        def tag = sh script: 'git rev-parse HEAD', returnStdout: true
-        return tag
-    }
-
 pipeline {
     agent any
-    environment{
-	    Docker_tag = getDockerTag()
-    }
     stages {
         stage('git') {
             steps {
                 git branch: 'dev', url: 'https://github.com/QuantumQuackDoctor/order-service.git'
             }
         }
-        stage('build') {
+        stage('package') {
             steps {
-                sh "mvn clean install"
+                sh "mvn clean package"
             }
         }
         stage('test') {
@@ -36,28 +28,21 @@ pipeline {
                 waitForQualityGate abortPipeline= true
             }   
         }
-
-        stage('package') {
-            steps {
-                sh "mvn clean package"
-            }
-        }
-        stage('docker') {
+        stage('ECR Push') {
             steps{
                 script {
-                    sh 'cp -r /var/lib/jenkins/workspace/order-service-job/order-api/target .'
-                    sh 'docker build . -t quangmtran36/qqd-order-service:$Docker_tag'
-                    withCredentials([string(credentialsId: '6b6d3ec6-97dc-4c1c-bf02-67afd00371dc', variable: 'dockerHubPwd')]) {
-                        sh 'docker login -u quangmtran36 -p ${dockerHubPwd}'
-                        sh 'docker push quangmtran36/qqd-order-service:$Docker_tag'                 
-                    }
+                    sh 'docker build -t order-service .'
+                    sh "aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 644684002839.dkr.ecr.us-east-2.amazonaws.com"
+                    sh 'docker tag order-service:latest 644684002839.dkr.ecr.us-east-2.amazonaws.com/order-service:latest'
+                    sh 'docker push 644684002839.dkr.ecr.us-east-2.amazonaws.com/order-service:latest'               
                 }
             }
         }
-        stage('aws') {
-            steps {
-                echo "aws"
-                //sh "mvn clean test"
+    }
+    post {
+        success {
+            script {
+                sh 'docker rmi $(docker images -a | grep aws | awk '{print $3}')'
             }
         }
     }

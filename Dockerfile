@@ -1,7 +1,6 @@
 FROM adoptopenjdk:16-jre-openj9 
 
-WORKDIR /var/lib/jenkins/workspace/order-service-job
-ARG JAR_FILE=/target/*.jar
+ARG JAR_FILE=order-api/target/*.jar
 
 COPY ${JAR_FILE} app.jar
 
