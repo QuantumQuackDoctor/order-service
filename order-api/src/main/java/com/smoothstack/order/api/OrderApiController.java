@@ -78,8 +78,8 @@ public class OrderApiController implements OrderApi {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PutMapping(path = "/order/sample")
-    public ResponseEntity<OrderEntity> addSampleOrder (){
+    /*    @PutMapping(path = "/order/sample")
+    public ResponseEntity<CreateResponse> addSampleOrder (){
         return ResponseEntity.ok(orderService.createSampleOrder());
-    }
+    }*/
 }
