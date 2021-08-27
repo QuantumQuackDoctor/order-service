@@ -6,11 +6,6 @@ pipeline {
                 git branch: 'dev', url: 'https://github.com/QuantumQuackDoctor/order-service.git'
             }
         }
-        stage('package') {
-            steps {
-                sh "mvn clean package"
-            }
-        }
         stage('test') {
             steps {
                 sh "mvn clean test"
@@ -28,6 +23,11 @@ pipeline {
                 waitForQualityGate abortPipeline= true
             }   
         }
+        stage('package') {
+            steps {
+                sh "mvn clean package"
+            }
+        }
         stage('ECR Push') {
             steps{
                 script {
@@ -42,7 +42,7 @@ pipeline {
     post {
         success {
             script {
-                sh 'docker rmi $(docker images -a | grep aws | awk '{print $3}')'
+                sh 'docker image prune -f -a'
             }
         }
     }
