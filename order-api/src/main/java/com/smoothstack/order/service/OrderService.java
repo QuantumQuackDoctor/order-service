@@ -9,6 +9,7 @@ import com.database.ormlibrary.user.UserEntity;
 import com.smoothstack.order.api.OrderApi;
 import com.smoothstack.order.exception.OrderTimeException;
 import com.smoothstack.order.exception.UserNotFoundException;
+import com.smoothstack.order.exception.ValueNotPresentException;
 import com.smoothstack.order.model.*;
 import com.smoothstack.order.repo.*;
 import io.swagger.annotations.ApiParam;
@@ -22,12 +23,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.context.request.NativeWebRequest;
 
 import javax.validation.Valid;
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
@@ -52,7 +55,7 @@ public class OrderService {
     }
 
 
-    public ResponseEntity<Void> deleteOrder(Long id){
+    public ResponseEntity<Void> deleteOrder(Long id) throws ValueNotPresentException {
         OrderEntity orderEntity = orderRepo.findById(id).isPresent() ?
                 orderRepo.findById(id).get() : null;
         if (orderEntity == null) return new ResponseEntity<>(HttpStatus.OK);
@@ -95,6 +98,113 @@ public class OrderService {
             return orderList;
         }
         throw new UserNotFoundException("User not found!");
+    }
+
+    public ResponseEntity<Order> getOrder(Long id) throws ValueNotPresentException {
+
+        Optional<OrderEntity> orderEntity = orderRepo.findById(id);
+        Order orderDTO = new Order();
+
+        try {
+            orderDTO = convertToDTO(orderEntity.get());
+        } catch (Exception e) {
+            throw new ValueNotPresentException("No item of that id in the database");
+        }
+
+
+        return ResponseEntity.ok(orderDTO);
+    }
+
+
+
+    public ResponseEntity<List<Order>> getActiveOrders(String sortType, Integer page, Integer size) {
+        Iterable<OrderEntity> orderEntities = orderRepo.findAll();
+        List<Order> orderDTOs = new ArrayList<>();
+        for (OrderEntity orderEntity : orderEntities) {
+             if (orderEntity.getRefunded() == null || orderEntity.getRefunded() == false )
+                orderDTOs.add(convertToDTO(orderEntity));
+        }
+
+        orderDTOs = sortList(orderDTOs, sortType);
+        orderDTOs = pageList(orderDTOs, page, size);
+
+        return ResponseEntity.ok(orderDTOs);
+    }
+
+    public List<Order> pageList(List<Order> orders, Integer page, Integer size) {
+        if((page + 1) * size > orders.size()) {
+            return orders.subList(page * size, orders.size());
+        }
+        return orders.subList(page * size, (page + 1) * size);
+    }
+
+    public List<Order> sortList(List<Order> orders, String sortType) {
+        switch (sortType != null? sortType : "") {
+            case "time":
+                orders = orders.stream().sorted((x, y) -> sortTime(y.getOrderTime().getDeliverySlot(), x.getOrderTime().getDeliverySlot())).collect(Collectors.toList());
+                break;
+            case "price":
+                orders = orders.stream().sorted((x, y) -> sortPrice(y.getPrice().getTip(), x.getPrice().getTip())).collect(Collectors.toList());
+                break;
+            default:
+                break;
+        }
+        return orders;
+    }
+
+    public Integer sortPrice(BigDecimal price1, BigDecimal price2) {
+        if (price1 == null) {
+            return -1;
+        }
+        if (price2 == null) {
+            return 1;
+        }
+        return price1.compareTo(price2);
+    }
+
+    public Integer sortTime(String time1, String time2) {
+        if (time1 == null) {
+            return -1;
+        }
+        if (time2 == null) {
+            return 1;
+        }
+        ZonedDateTime t1 = ZonedDateTime.parse(time1);
+        ZonedDateTime t2 = ZonedDateTime.parse(time2);
+        return t1.toInstant().compareTo(t2.toInstant());
+    }
+
+    public OrderEntity createSampleOrder() {
+        OrderTimeEntity orderTimeEntity = new OrderTimeEntity().setDeliverySlot(ZonedDateTime.parse("2011-12-03T10:15:30+01:00"))
+                .setRestaurantAccept(ZonedDateTime.parse("2011-12-03T10:35:30+01:00"));
+
+        List<MenuItemEntity> orderItemsEntities = new ArrayList<>();
+        MenuItemEntity menuItemEntity1 = new MenuItemEntity().setName("Sample Item 1");
+        MenuItemEntity menuItemEntity2 = new MenuItemEntity().setName("Sample Item 2");
+        orderItemsEntities.add(menuItemEntity1);
+        orderItemsEntities.add(menuItemEntity2);
+        menuItemRepo.save(menuItemEntity1);
+        menuItemRepo.save(menuItemEntity2);
+
+        FoodOrderEntity foodOrderEntity = new FoodOrderEntity().setId(1L).setOrderItems(orderItemsEntities).setRestaurantId(1L);
+        foodOrderRepo.save(foodOrderEntity);
+        List<FoodOrderEntity> foodOrderEntities = new ArrayList<>();
+        foodOrderEntities.add(foodOrderEntity);
+
+        PriceEntity priceEntity = new PriceEntity().setFood(23.09f);
+
+        OrderEntity orderEntity = new OrderEntity()
+                .setId(23L).setDelivery(true).setRefunded(false)
+                .setAddress("123 Street St").setOrderTimeEntity(orderTimeEntity)
+                .setItems(foodOrderEntities).setPriceEntity(priceEntity);
+
+        return orderRepo.save(orderEntity);
+    }
+
+    public ResponseEntity<Void> patchOrders(Order order) {
+        OrderEntity orderEntity = convertToEntity(order);
+        orderRepo.save(orderEntity);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     public Order convertToDTO(OrderEntity orderEntity) {
@@ -192,6 +302,15 @@ public class OrderService {
 
         }
         return orderEntity;
+    }
+
+    public void insertSampleMenuItems(){
+        MenuItemEntity menuItemEntity1 = new MenuItemEntity().setName("Sample Item 1").setId(1L).setPrice(5.3f);
+        MenuItemEntity menuItemEntity2 = new MenuItemEntity().setName("Sample Item 2").setId(2L).setPrice(3.5f);
+        if (!menuItemRepo.findById(1L).isPresent())
+            menuItemRepo.save(menuItemEntity1);
+        if (!menuItemRepo.findById(2L).isPresent())
+            menuItemRepo.save(menuItemEntity2);
     }
 
 }

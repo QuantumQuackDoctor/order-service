@@ -26,6 +26,19 @@ public class OrderExceptionHandler {
         );
     }
 
+    @ExceptionHandler(ValueNotPresentException.class)
+    @ResponseBody
+    public ResponseEntity<Object> handleNotFound(ValueNotPresentException e) {
+        return ResponseEntity.badRequest().body(
+                new OrderException(
+                        e.getMessage(),
+                        e,
+                        HttpStatus.BAD_REQUEST,
+                        ZonedDateTime.now()
+                )
+        );
+    }
+
     @ExceptionHandler(MissingFieldsException.class)
     @ResponseBody
     public ResponseEntity<Object> handleMissingFields (MissingFieldsException e){
