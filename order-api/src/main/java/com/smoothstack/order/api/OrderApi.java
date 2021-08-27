@@ -348,4 +348,33 @@ public interface OrderApi {
 
     }
 
+    /**
+     * PATCH /orders : Admin Update Order
+     * Update order, use this to connect orders with drivers (set driverId)
+     *
+     * @param order Order to update, non null properties will be updated, id necessary (optional)
+     * @return Update successful (status code 200)
+     *         or Access token is missing or invalid (status code 401)
+     *         or Forbidden (status code 403)
+     *         or Not Found (status code 404)
+     */
+    @ApiOperation(value = "Admin Update Order", nickname = "patchOrders", notes = "Update order, use this to connect orders with drivers (set driverId)", authorizations = {
+
+            @Authorization(value = "JWT")
+    }, tags={ "order", })
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Update successful"),
+            @ApiResponse(code = 401, message = "Access token is missing or invalid", response = String.class),
+            @ApiResponse(code = 403, message = "Forbidden"),
+            @ApiResponse(code = 404, message = "Not Found") })
+    @PatchMapping(
+            value = "/orders",
+            produces = { "application/json" },
+            consumes = { "application/json" }
+    )
+    default ResponseEntity<Void> patchOrders(@ApiParam(value = "Order to update, non null properties will be updated, id necessary"  )  @Valid @RequestBody(required = false) Order order) {
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+
+    }
+
 }
