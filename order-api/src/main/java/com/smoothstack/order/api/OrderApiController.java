@@ -1,10 +1,8 @@
 package com.smoothstack.order.api;
 
 import com.database.security.AuthDetails;
-import com.smoothstack.order.exception.EmptyCartException;
-import com.smoothstack.order.exception.MissingFieldsException;
-import com.smoothstack.order.exception.OrderTimeException;
-import com.smoothstack.order.exception.UserNotFoundException;
+import com.database.ormlibrary.order.OrderEntity;
+import com.smoothstack.order.exception.*;
 import com.smoothstack.order.model.CreateResponse;
 import com.smoothstack.order.model.Order;
 import com.smoothstack.order.service.OrderService;
@@ -39,11 +37,21 @@ public class OrderApiController implements OrderApi {
         return Optional.ofNullable(request);
     }
 
-/*    @Override
+    @Override
     @PreAuthorize("hasAuthority('admin')")
-    public ResponseEntity<Order> getOrder(@ApiParam(value = "if true only returns pending orders") @Valid @RequestParam(value = "id", required = false) Long id){
+    public ResponseEntity<Order> getOrder(@ApiParam(value = "") @Valid @RequestParam(value = "id", required = false) Long id) throws ValueNotPresentException {
         return orderService.getOrder(id);
-    }*/
+    }
+
+    @Override
+    public ResponseEntity<Void> patchOrders(Order order) {
+        return orderService.patchOrders(order);
+    }
+
+    @Override
+    public ResponseEntity<List<Order>> getActiveOrders(String sortType, Integer page, Integer size) {
+        return orderService.getActiveOrders(sortType, page, size);
+    }
 
     @Override
     @PreAuthorize("hasAuthority('user')")
@@ -65,7 +73,7 @@ public class OrderApiController implements OrderApi {
     }
 
     @Override
-    public ResponseEntity<Void> deleteOrder(Long id) {
+    public ResponseEntity<Void> deleteOrder(Long id) throws ValueNotPresentException {
         orderService.deleteOrder(id);
         return new ResponseEntity<>(HttpStatus.OK);
     }

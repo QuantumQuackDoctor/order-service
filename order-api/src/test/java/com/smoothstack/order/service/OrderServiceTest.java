@@ -9,6 +9,7 @@ import com.database.ormlibrary.order.PriceEntity;
 import com.database.ormlibrary.user.UserEntity;
 import com.smoothstack.order.exception.OrderTimeException;
 import com.smoothstack.order.exception.UserNotFoundException;
+import com.smoothstack.order.exception.ValueNotPresentException;
 import com.smoothstack.order.model.CreateResponse;
 import com.smoothstack.order.model.Order;
 import com.smoothstack.order.model.OrderOrderTime;
@@ -72,6 +73,27 @@ class OrderServiceTest {
 
         assertThrows (OrderTimeException.class, () -> orderService.createOrder(orderDTO, 500L));
 
+    }
+
+    @Test
+    void createDeleteOrderTest() throws OrderTimeException, ValueNotPresentException, UserNotFoundException {
+        OrderEntity orderEntity = getSampleOrder();
+
+        Mockito.when (userRepo.findById(anyLong())).thenReturn (sampleUser());
+        Mockito.when (orderRepo.save (Mockito.any())).thenReturn(getSampleOrder());
+        Mockito.when (restaurantRepo.findById(Mockito.any())).thenReturn (Optional.of (new RestaurantEntity().setName("Sample Restaurant")));
+
+        Order orderDTO = orderService.convertToDTO(orderEntity);
+
+        CreateResponse insertedResponse = orderService.createOrder(orderDTO, 500L).getBody();
+
+        assert insertedResponse != null;
+        assertEquals (orderDTO.getAddress(), insertedResponse.getAddress());
+
+
+        orderService.deleteOrder(500L);
+
+        assertThrows (ValueNotPresentException.class, () -> orderService.getOrder(500L));
     }
 
     public Optional<UserEntity> sampleUser (){
