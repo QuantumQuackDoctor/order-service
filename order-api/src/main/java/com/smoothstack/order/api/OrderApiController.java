@@ -1,11 +1,12 @@
 package com.smoothstack.order.api;
 
 import com.database.security.AuthDetails;
-import com.database.ormlibrary.order.OrderEntity;
 import com.smoothstack.order.exception.*;
+import com.smoothstack.order.model.ChargeResponse;
 import com.smoothstack.order.model.CreateResponse;
 import com.smoothstack.order.model.Order;
 import com.smoothstack.order.service.OrderService;
+import com.stripe.exception.StripeException;
 import io.swagger.annotations.ApiParam;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -82,4 +83,10 @@ public class OrderApiController implements OrderApi {
     public ResponseEntity<CreateResponse> addSampleOrder (){
         return ResponseEntity.ok(orderService.createSampleOrder());
     }*/
+
+    @PreAuthorize("permitAll()")
+    @PostMapping ("/order/charge")
+    public ResponseEntity<ChargeResponse> createPaymentIntent (@RequestBody String tokenId) throws StripeException {
+        return ResponseEntity.ok().body(orderService.createStripeCharge(tokenId));
+    }
 }
