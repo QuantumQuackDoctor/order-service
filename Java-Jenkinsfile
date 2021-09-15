@@ -39,12 +39,10 @@
                     script {
                         withCredentials([string(credentialsId:'634033370481', variable:'AWS_ID')])
                         {
-                            sh
-                            "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
-                            sh "docker build -t order-service ."
-                            sh
-                            "docker tag order-service:latest ${AWS_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/order-service:latest"
-                            sh "docker push ${AWS_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/order-service:latest"
+                            sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+                            sh "docker build -t java-order-service ."
+                            sh "docker tag java-order-service:latest ${AWS_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/java-order-service:latest"
+                            sh "docker push ${AWS_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/java-order-service:latest"
                         }
                     }
                 }
