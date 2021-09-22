@@ -1,28 +1,28 @@
 package com.smoothstack.order.service;
 
+import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
+import com.amazonaws.services.simpleemail.model.*;
 import com.database.ormlibrary.food.MenuItemEntity;
 import com.database.ormlibrary.order.FoodOrderEntity;
 import com.database.ormlibrary.order.OrderEntity;
 import com.database.ormlibrary.order.OrderTimeEntity;
 import com.database.ormlibrary.order.PriceEntity;
 import com.database.ormlibrary.user.UserEntity;
-import com.smoothstack.order.api.OrderApi;
 import com.smoothstack.order.exception.OrderTimeException;
 import com.smoothstack.order.exception.UserNotFoundException;
 import com.smoothstack.order.exception.ValueNotPresentException;
 import com.smoothstack.order.model.*;
 import com.smoothstack.order.repo.*;
-import io.swagger.annotations.ApiParam;
+import com.stripe.Stripe;
+import com.stripe.exception.StripeException;
+import com.stripe.model.Charge;
+import com.stripe.param.ChargeCreateParams;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.context.request.NativeWebRequest;
 
-import javax.validation.Valid;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -41,25 +41,28 @@ public class OrderService {
     private final FoodOrderRepo foodOrderRepo;
     private final RestaurantRepo restaurantRepo;
     private final UserRepo userRepo;
+    private final AmazonSimpleEmailService emailService;
+    @Value("${email.sender}")
+    private String emailFrom;
 
     private final ModelMapper modelMapper;
 
-    public OrderService(OrderRepo orderRepo, DriverRepo driverRepo, MenuItemRepo menuItemRepo, FoodOrderRepo foodOrderRepo, RestaurantRepo restaurantRepo, UserRepo userRepo) {
+    public OrderService(OrderRepo orderRepo, DriverRepo driverRepo, MenuItemRepo menuItemRepo, FoodOrderRepo foodOrderRepo, RestaurantRepo restaurantRepo, UserRepo userRepo, AmazonSimpleEmailService emailService) {
         this.orderRepo = orderRepo;
         this.driverRepo = driverRepo;
         this.menuItemRepo = menuItemRepo;
         this.foodOrderRepo = foodOrderRepo;
         this.restaurantRepo = restaurantRepo;
         this.userRepo = userRepo;
+        this.emailService = emailService;
         this.modelMapper = new ModelMapper();
     }
-
 
     public ResponseEntity<Void> deleteOrder(Long id) throws ValueNotPresentException {
         OrderEntity orderEntity = orderRepo.findById(id).isPresent() ?
                 orderRepo.findById(id).get() : null;
         if (orderEntity == null) return new ResponseEntity<>(HttpStatus.OK);
-        List <FoodOrderEntity> foodOrderEntityList = orderEntity.getItems();
+        List<FoodOrderEntity> foodOrderEntityList = orderEntity.getItems();
         for (FoodOrderEntity foodOrderEntity : foodOrderEntityList)
             foodOrderRepo.delete(foodOrderEntity);
         orderRepo.deleteById(id);
@@ -116,12 +119,11 @@ public class OrderService {
     }
 
 
-
     public ResponseEntity<List<Order>> getActiveOrders(String sortType, Integer page, Integer size) {
         Iterable<OrderEntity> orderEntities = orderRepo.findAll();
         List<Order> orderDTOs = new ArrayList<>();
         for (OrderEntity orderEntity : orderEntities) {
-             if (orderEntity.getRefunded() == null || orderEntity.getRefunded() == false )
+            if (orderEntity.getRefunded() == null || orderEntity.getRefunded() == false)
                 orderDTOs.add(convertToDTO(orderEntity));
         }
 
@@ -132,14 +134,14 @@ public class OrderService {
     }
 
     public List<Order> pageList(List<Order> orders, Integer page, Integer size) {
-        if((page + 1) * size > orders.size()) {
+        if ((page + 1) * size > orders.size()) {
             return orders.subList(page * size, orders.size());
         }
         return orders.subList(page * size, (page + 1) * size);
     }
 
     public List<Order> sortList(List<Order> orders, String sortType) {
-        switch (sortType != null? sortType : "") {
+        switch (sortType != null ? sortType : "") {
             case "time":
                 orders = orders.stream().sorted((x, y) -> sortTime(y.getOrderTime().getDeliverySlot(), x.getOrderTime().getDeliverySlot())).collect(Collectors.toList());
                 break;
@@ -172,33 +174,6 @@ public class OrderService {
         ZonedDateTime t1 = ZonedDateTime.parse(time1);
         ZonedDateTime t2 = ZonedDateTime.parse(time2);
         return t1.toInstant().compareTo(t2.toInstant());
-    }
-
-    public OrderEntity createSampleOrder() {
-        OrderTimeEntity orderTimeEntity = new OrderTimeEntity().setDeliverySlot(ZonedDateTime.parse("2011-12-03T10:15:30+01:00"))
-                .setRestaurantAccept(ZonedDateTime.parse("2011-12-03T10:35:30+01:00"));
-
-        List<MenuItemEntity> orderItemsEntities = new ArrayList<>();
-        MenuItemEntity menuItemEntity1 = new MenuItemEntity().setName("Sample Item 1");
-        MenuItemEntity menuItemEntity2 = new MenuItemEntity().setName("Sample Item 2");
-        orderItemsEntities.add(menuItemEntity1);
-        orderItemsEntities.add(menuItemEntity2);
-        menuItemRepo.save(menuItemEntity1);
-        menuItemRepo.save(menuItemEntity2);
-
-        FoodOrderEntity foodOrderEntity = new FoodOrderEntity().setId(1L).setOrderItems(orderItemsEntities).setRestaurantId(1L);
-        foodOrderRepo.save(foodOrderEntity);
-        List<FoodOrderEntity> foodOrderEntities = new ArrayList<>();
-        foodOrderEntities.add(foodOrderEntity);
-
-        PriceEntity priceEntity = new PriceEntity().setFood(23.09f);
-
-        OrderEntity orderEntity = new OrderEntity()
-                .setId(23L).setDelivery(true).setRefunded(false)
-                .setAddress("123 Street St").setOrderTimeEntity(orderTimeEntity)
-                .setItems(foodOrderEntities).setPriceEntity(priceEntity);
-
-        return orderRepo.save(orderEntity);
     }
 
     public ResponseEntity<Void> patchOrders(Order order) {
@@ -304,13 +279,59 @@ public class OrderService {
         return orderEntity;
     }
 
-    public void insertSampleMenuItems(){
-        MenuItemEntity menuItemEntity1 = new MenuItemEntity().setName("Sample Item 1").setId(1L).setPrice(5.3f);
-        MenuItemEntity menuItemEntity2 = new MenuItemEntity().setName("Sample Item 2").setId(2L).setPrice(3.5f);
-        if (!menuItemRepo.findById(1L).isPresent())
-            menuItemRepo.save(menuItemEntity1);
-        if (!menuItemRepo.findById(2L).isPresent())
-            menuItemRepo.save(menuItemEntity2);
+    public ChargeResponse createStripeCharge(ChargeRequest chargeRequest) {
+        //TODO store stripe sk somewhere else
+        Stripe.apiKey = "sk_test_51JUCrpATHQZZA29uttyLiHs6lJWkVcybe4Tu3a4sfJTnxYLAMwAr1hdfMvtXSGAFfcXKnaUM6SG2kL42IDXDfz1c00SN07hSbc";
+
+        ChargeCreateParams params = ChargeCreateParams.builder()
+                .setAmount(chargeRequest.getChargePrice())
+                .setCurrency("usd")
+                .setDescription("Test Charge")
+                .setSource(chargeRequest.getTokenId())
+                .build();
+
+        Charge charge;
+        ChargeResponse chargeResponse;
+        try {
+            charge = Charge.create(params);
+            chargeResponse = new ChargeResponse(charge.toJson(), "");
+        } catch (StripeException e) {
+            chargeResponse = new ChargeResponse(null, e.getMessage().split(";")[0]);
+        }
+
+        return chargeResponse;
     }
 
+    public Order sendOrderConfirmation(Long orderId, Long userId) {
+        StringBuilder builder = new StringBuilder();
+        UserEntity entity = userRepo.findById(userId).get();
+        if (entity.getSettings().getNotifications().getEmail()) {
+            String emailTo = entity.getEmail();
+            Order order = convertToDTO(orderRepo.findById(orderId).orElse(null));
+            builder.append("<h1>Scrumptious Order Confirmation: <h1> \n <strong>Order Items: </strong>");
+            for (OrderFood orderFood : order.getFood()) {
+                builder.append("<p>").append(orderFood.getRestaurantName()).append(": ");
+                List<OrderItems> itemsList = orderFood.getItems();
+                for (int i = 0; i < itemsList.size(); i++) {
+                    if (i < itemsList.size() - 1)
+                        builder.append(itemsList.get(i).getName()).append(", ");
+                    else
+                        builder.append(itemsList.get(i).getName());
+                }
+                builder.append("<p>");
+            }
+            BigDecimal price = order.getPrice().getFood().divide(new BigDecimal("100"));
+            builder.append("<b>Total: </b> $").append(price);
+            String htmlBody = builder.toString();
+
+            SendEmailRequest request = new SendEmailRequest()
+                    .withDestination(new Destination().withToAddresses(emailTo))
+                    .withMessage(new Message()
+                            .withBody(new Body()
+                                    .withHtml(new Content().withCharset("UTF-8").withData(htmlBody))).withSubject(new Content()
+                                    .withCharset("UTF-8").withData("Scrumptious Order Confirmation"))).withSource(emailFrom);
+            emailService.sendEmail(request);
+            return order;
+        }return null;
+    }
 }

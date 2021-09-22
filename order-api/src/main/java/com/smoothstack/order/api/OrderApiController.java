@@ -2,11 +2,11 @@ package com.smoothstack.order.api;
 
 import com.database.security.AuthDetails;
 import com.smoothstack.order.exception.*;
+import com.smoothstack.order.model.ChargeRequest;
 import com.smoothstack.order.model.ChargeResponse;
 import com.smoothstack.order.model.CreateResponse;
 import com.smoothstack.order.model.Order;
 import com.smoothstack.order.service.OrderService;
-import com.stripe.exception.StripeException;
 import io.swagger.annotations.ApiParam;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -79,14 +79,17 @@ public class OrderApiController implements OrderApi {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    /*    @PutMapping(path = "/order/sample")
-    public ResponseEntity<CreateResponse> addSampleOrder (){
-        return ResponseEntity.ok(orderService.createSampleOrder());
-    }*/
 
-    @PreAuthorize("permitAll()")
+    @PreAuthorize("hasAuthority ('user')")
     @PostMapping ("/order/charge")
-    public ResponseEntity<ChargeResponse> createPaymentIntent (@RequestBody String tokenId) throws StripeException {
-        return ResponseEntity.ok().body(orderService.createStripeCharge(tokenId));
+    public ResponseEntity<ChargeResponse> createPaymentIntent (@RequestBody ChargeRequest chargeRequest) {
+        return ResponseEntity.ok().body(orderService.createStripeCharge(chargeRequest));
+    }
+
+    @PreAuthorize("hasAuthority(('user'))")
+    @PostMapping ("/order/email-order")
+    public ResponseEntity<Order> sendOrderConfirmation (@Valid @RequestBody CreateResponse createResponse, Authentication authentication){
+        AuthDetails authDetails = (AuthDetails) authentication.getPrincipal();
+        return ResponseEntity.ok().body(this.orderService.sendOrderConfirmation(Long.parseLong(createResponse.getId()), authDetails.getId()));
     }
 }
