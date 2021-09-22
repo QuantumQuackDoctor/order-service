@@ -39,12 +39,6 @@ public interface OrderApi {
     default Optional<NativeWebRequest> getRequest() {
         return Optional.empty();
     }
-    
-    @GetMapping (path = "/health")
-    @PreAuthroize ("permitAll()")
-    public ResponseEntity<void> healthCheck (){
-        return ResponseEntity.ok();
-    }
 
     /**
      * PUT /order : Create order
