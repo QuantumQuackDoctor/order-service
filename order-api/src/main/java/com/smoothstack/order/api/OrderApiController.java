@@ -17,6 +17,7 @@ import org.springframework.web.context.request.NativeWebRequest;
 import javax.validation.Valid;
 import java.util.List;
 import java.util.Optional;
+
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2021-06-30T22:53:09.076567700-06:00[America/Denver]")
 @RestController
 @RequestMapping(path = "${openapi.orchestrator.base-path:}")
@@ -56,20 +57,20 @@ public class OrderApiController implements OrderApi {
     @Override
     @PreAuthorize("hasAuthority('user')")
     public ResponseEntity<CreateResponse> createOrder(Order order, Authentication authentication) throws MissingFieldsException, EmptyCartException, OrderTimeException, UserNotFoundException {
-       if (!order.checkRequiredFields())
+        if (!order.checkRequiredFields())
             throw new MissingFieldsException("Missing require fields");
-       if (order.getFood().size() == 0)
-           throw new EmptyCartException("No items in cart.");
+        if (order.getFood().size() == 0)
+            throw new EmptyCartException("No items in cart.");
         AuthDetails autheDetails = (AuthDetails) authentication.getPrincipal();
         return orderService.createOrder(order, autheDetails.getId());
     }
 
 
     @PreAuthorize("hasAuthority('user')")
-    @GetMapping (path = "/order/user", produces = {"application/json"})
-    public ResponseEntity<List<Order>> getUserOrders (Authentication authentication) throws UserNotFoundException {
+    @GetMapping(path = "/order/user", produces = {"application/json"})
+    public ResponseEntity<List<Order>> getUserOrders(Authentication authentication) throws UserNotFoundException {
         AuthDetails authDetails = (AuthDetails) authentication.getPrincipal();
-        return ResponseEntity.ok (orderService.getUserOrders (authDetails.getId()));
+        return ResponseEntity.ok(orderService.getUserOrders(authDetails.getId()));
     }
 
     @Override
@@ -83,3 +84,6 @@ public class OrderApiController implements OrderApi {
         return ResponseEntity.ok(orderService.createSampleOrder());
     }*/
 }
+
+
+
