@@ -1,12 +1,10 @@
 package com.smoothstack.order.exception;
 
-import org.h2.engine.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import java.time.ZonedDateTime;
 
@@ -17,7 +15,7 @@ public class OrderExceptionHandler {
     @ResponseBody
     public ResponseEntity<Object> handleEmptyCart (EmptyCartException e){
         return ResponseEntity.badRequest().body(
-                new OrderException(
+                new OrderExceptionResponse(
                         e.getMessage(),
                         e,
                         HttpStatus.BAD_REQUEST,
@@ -30,7 +28,7 @@ public class OrderExceptionHandler {
     @ResponseBody
     public ResponseEntity<Object> handleNotFound(ValueNotPresentException e) {
         return ResponseEntity.badRequest().body(
-                new OrderException(
+                new OrderExceptionResponse(
                         e.getMessage(),
                         e,
                         HttpStatus.BAD_REQUEST,
@@ -43,7 +41,7 @@ public class OrderExceptionHandler {
     @ResponseBody
     public ResponseEntity<Object> handleMissingFields (MissingFieldsException e){
         return ResponseEntity.badRequest().body(
-                new OrderException(
+                new OrderExceptionResponse(
                         e.getMessage(),
                         e,
                         HttpStatus.BAD_REQUEST,
@@ -56,7 +54,7 @@ public class OrderExceptionHandler {
     @ResponseBody
     public ResponseEntity<Object> handleTimeException (OrderTimeException e){
         return ResponseEntity.badRequest().body(
-                new OrderException(
+                new OrderExceptionResponse(
                         e.getMessage(),
                         e,
                         HttpStatus.BAD_REQUEST,
@@ -69,7 +67,7 @@ public class OrderExceptionHandler {
     @ResponseBody
     public ResponseEntity<Object> handleUserNotFoundException (UserNotFoundException e){
         return ResponseEntity.badRequest().body(
-                new OrderException(
+                new OrderExceptionResponse(
                         e.getMessage(),
                         e,
                         HttpStatus.BAD_REQUEST,

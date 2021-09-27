@@ -50,14 +50,17 @@ public class OrderService {
     }
 
 
-    public ResponseEntity<Void> deleteOrder(Long id) {
+    public void deleteOrder(Long id) {
         OrderEntity orderEntity = orderRepo.findById(id).isPresent() ? orderRepo.findById(id).get() : null;
-        if (orderEntity == null) return new ResponseEntity<>(HttpStatus.OK);
+        if (orderEntity == null) {
+            new ResponseEntity<>(HttpStatus.OK);
+            return;
+        }
         List<FoodOrderEntity> foodOrderEntityList = orderEntity.getItems();
         foodOrderRepo.deleteAll(foodOrderEntityList);
         orderRepo.deleteById(id);
 
-        return ResponseEntity.ok (null);
+        ResponseEntity.ok(null);
     }
 
     public ResponseEntity<CreateResponse> createOrder(Order orderDTO,
@@ -158,33 +161,6 @@ public class OrderService {
         return t1.toInstant().compareTo(t2.toInstant());
     }
 
-    public OrderEntity createSampleOrder() {
-        OrderTimeEntity orderTimeEntity = new OrderTimeEntity().setDeliverySlot(ZonedDateTime.parse("2011-12-03T10:15:30+01:00"))
-                .setRestaurantAccept(ZonedDateTime.parse("2011-12-03T10:35:30+01:00"));
-
-        List<MenuItemEntity> orderItemsEntities = new ArrayList<>();
-        MenuItemEntity menuItemEntity1 = new MenuItemEntity().setName("Sample Item 1");
-        MenuItemEntity menuItemEntity2 = new MenuItemEntity().setName("Sample Item 2");
-        orderItemsEntities.add(menuItemEntity1);
-        orderItemsEntities.add(menuItemEntity2);
-        menuItemRepo.save(menuItemEntity1);
-        menuItemRepo.save(menuItemEntity2);
-
-        FoodOrderEntity foodOrderEntity = new FoodOrderEntity().setId(1L).setOrderItems(orderItemsEntities).setRestaurantId(1L);
-        foodOrderRepo.save(foodOrderEntity);
-        List<FoodOrderEntity> foodOrderEntities = new ArrayList<>();
-        foodOrderEntities.add(foodOrderEntity);
-
-        PriceEntity priceEntity = new PriceEntity().setFood(23.09f);
-
-        OrderEntity orderEntity = new OrderEntity()
-                .setId(23L).setDelivery(true).setRefunded(false)
-                .setAddress("123 Street St").setOrderTimeEntity(orderTimeEntity)
-                .setItems(foodOrderEntities).setPriceEntity(priceEntity);
-
-        return orderRepo.save(orderEntity);
-    }
-
     public ResponseEntity<Void> patchOrders(Order order) {
         OrderEntity orderEntity = convertToEntity(order);
         orderRepo.save(orderEntity);
@@ -207,7 +183,7 @@ public class OrderService {
             OrderFood orderFood = modelMapper.map(foodOrderEntity, OrderFood.class);
             orderFood.setRestaurantId(String.valueOf(foodOrderEntity.getRestaurantId()));
             Optional<RestaurantEntity> restaurantEntity = restaurantRepo.findById(foodOrderEntity.getRestaurantId());
-            orderFood.setRestaurantName(restaurantEntity.isPresent()? restaurantEntity.get().getName(): "");
+            orderFood.setRestaurantName(restaurantEntity.isPresent() ? restaurantEntity.get().getName() : "");
             orderFoodList.add(orderFood);
             for (MenuItemEntity menuItemEntity : foodOrderEntity.getOrderItems()) {
                 OrderItems orderItems = modelMapper.map(menuItemEntity, OrderItems.class);
@@ -227,16 +203,16 @@ public class OrderService {
     }
 
     public OrderOrderTime convertTimeToDTO(OrderTimeEntity orderTimeEntity) {
-
         OrderOrderTime orderTimeDTO = new OrderOrderTime();
+        String TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
         if (orderTimeEntity.getOrderComplete() != null) {
-            String orderComplete = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(
+            String orderComplete = DateTimeFormatter.ofPattern(TIME_FORMAT).format(
                     orderTimeEntity.getOrderComplete());
             orderTimeDTO.setDelivered(orderComplete);
         }
-        orderTimeDTO.setDeliverySlot(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(
+        orderTimeDTO.setDeliverySlot(DateTimeFormatter.ofPattern(TIME_FORMAT).format(
                 orderTimeEntity.getDeliverySlot()));
-        orderTimeDTO.setRestaurantAccept(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(
+        orderTimeDTO.setRestaurantAccept(DateTimeFormatter.ofPattern(TIME_FORMAT).format(
                 orderTimeEntity.getRestaurantAccept()));
 
         return orderTimeDTO;
@@ -246,21 +222,17 @@ public class OrderService {
         OrderEntity orderEntity = modelMapper.map(orderDTO, OrderEntity.class);
 
         if (orderDTO.getDriverId() != null) {
-            Optional <DriverEntity> driverEntity = driverRepo.findById(Long.parseLong(orderDTO.getDriverId()));
+            Optional<DriverEntity> driverEntity = driverRepo.findById(Long.parseLong(orderDTO.getDriverId()));
             driverEntity.ifPresent(orderEntity::setDriver);
         }
 
         orderEntity.setDelivery(orderDTO.getOrderType().equals(Order.OrderTypeEnum.DELIVERY));
 
-       /* OrderOrderTime orderTimeDTO =
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyy-MM-dd'T'HH:mm:ss.SSSX");*/
-
         List<OrderFood> orderFoodList = orderDTO.getFood();
         List<FoodOrderEntity> foodOrderEntities = new ArrayList<>();
 
-        if (orderFoodList != null && orderFoodList.size() > 0) {
+        if (orderFoodList != null && !orderFoodList.isEmpty()) {
             //finds order lists from all restaurants
-
             for (OrderFood orderFood : orderFoodList) {
                 List<MenuItemEntity> itemEntities = new ArrayList<>();
                 //populates a specific order list with items
@@ -286,15 +258,6 @@ public class OrderService {
 
         }
         return orderEntity;
-    }
-
-    public void insertSampleMenuItems() {
-        MenuItemEntity menuItemEntity1 = new MenuItemEntity().setName("Sample Item 1").setId(1L).setPrice(5.3f);
-        MenuItemEntity menuItemEntity2 = new MenuItemEntity().setName("Sample Item 2").setId(2L).setPrice(3.5f);
-        if (!menuItemRepo.findById(1L).isPresent())
-            menuItemRepo.save(menuItemEntity1);
-        if (!menuItemRepo.findById(2L).isPresent())
-            menuItemRepo.save(menuItemEntity2);
     }
 
 }
