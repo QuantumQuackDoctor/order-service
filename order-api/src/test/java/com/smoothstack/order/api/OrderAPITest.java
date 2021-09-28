@@ -62,6 +62,12 @@ class OrderAPITest {
                 .andExpect(status().isOk());
     }
 
+    @Test
+    void getActiveOrders() throws Exception {
+        mockMvc.perform(get("/orders/driver").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+    }
+
     public OrderEntity getSampleOrder() {
         OrderTimeEntity orderTimeEntity = new OrderTimeEntity().setDeliverySlot(ZonedDateTime.parse("2011-12-03T10:35:30+01:00"))
                 .setRestaurantAccept(ZonedDateTime.parse("2011-12-03T10:15:30+01:00"));
