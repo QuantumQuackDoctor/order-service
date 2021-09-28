@@ -50,6 +50,7 @@ public class OrderApiController implements OrderApi {
     }
 
     @Override
+    @PreAuthorize("hasAuthority ('user')")
     public ResponseEntity<List<Order>> getActiveOrders(String sortType, Integer page, Integer size) {
         return orderService.getActiveOrders(sortType, page, size);
     }

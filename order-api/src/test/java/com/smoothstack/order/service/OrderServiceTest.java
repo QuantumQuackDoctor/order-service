@@ -36,13 +36,13 @@ import static org.mockito.ArgumentMatchers.anyLong;
 @SpringBootTest
 class OrderServiceTest {
 
-    @MockBean (OrderRepo.class)
+    @MockBean(OrderRepo.class)
     OrderRepo orderRepo;
 
-    @MockBean (RestaurantRepo.class)
+    @MockBean(RestaurantRepo.class)
     RestaurantRepo restaurantRepo;
 
-    @MockBean (UserRepo.class)
+    @MockBean(UserRepo.class)
     UserRepo userRepo;
 
     @Autowired
@@ -53,9 +53,9 @@ class OrderServiceTest {
 
         OrderEntity orderEntity = getSampleOrder();
 
-        Mockito.when (userRepo.findById(anyLong())).thenReturn (sampleUser());
-        Mockito.when (orderRepo.save (Mockito.any())).thenReturn(getSampleOrder());
-        Mockito.when (restaurantRepo.findById(Mockito.any())).thenReturn (Optional.of (new RestaurantEntity().setName("Sample Restaurant")));
+        Mockito.when(userRepo.findById(anyLong())).thenReturn(sampleUser());
+        Mockito.when(orderRepo.save(Mockito.any())).thenReturn(getSampleOrder());
+        Mockito.when(restaurantRepo.findById(Mockito.any())).thenReturn(Optional.of(new RestaurantEntity().setName("Sample Restaurant")));
         //inserts sample items in empty db
 
         Order orderDTO = orderService.convertToDTO(orderEntity);
@@ -63,7 +63,7 @@ class OrderServiceTest {
         CreateResponse insertedResponse = orderService.createOrder(orderDTO, 500L).getBody();
 
         assert insertedResponse != null;
-        assertEquals (orderDTO.getAddress(), insertedResponse.getAddress());
+        assertEquals(orderDTO.getAddress(), insertedResponse.getAddress());
 
         OrderOrderTime newDeliveryTime = orderDTO.getOrderTime();
 
@@ -71,40 +71,57 @@ class OrderServiceTest {
 
         orderDTO.setOrderTime(newDeliveryTime);
 
-        assertThrows (OrderTimeException.class, () -> orderService.createOrder(orderDTO, 500L));
+        assertThrows(OrderTimeException.class, () -> orderService.createOrder(orderDTO, 500L));
 
     }
 
     @Test
-    void createDeleteOrderTest() throws OrderTimeException, ValueNotPresentException, UserNotFoundException {
+    void getUserOrderNormal() throws UserNotFoundException {
+        Mockito.when(userRepo.findById(anyLong())).thenReturn(sampleUser());
+        List<Order> orderList = orderService.getUserOrders(1L);
+        assertEquals(0, orderList.size());
+    }
+
+    @Test
+    void getUserOrderException() {
+        assertThrows(UserNotFoundException.class, () -> orderService.getUserOrders(1L));
+    }
+
+    @Test
+    void createDeleteOrderTest() throws OrderTimeException, UserNotFoundException {
         OrderEntity orderEntity = getSampleOrder();
 
-        Mockito.when (userRepo.findById(anyLong())).thenReturn (sampleUser());
-        Mockito.when (orderRepo.save (Mockito.any())).thenReturn(getSampleOrder());
-        Mockito.when (restaurantRepo.findById(Mockito.any())).thenReturn (Optional.of (new RestaurantEntity().setName("Sample Restaurant")));
+        Mockito.when(userRepo.findById(anyLong())).thenReturn(sampleUser());
+        Mockito.when(orderRepo.save(Mockito.any())).thenReturn(getSampleOrder());
+        Mockito.when(restaurantRepo.findById(Mockito.any())).thenReturn(Optional.of(new RestaurantEntity().setName("Sample Restaurant")));
 
         Order orderDTO = orderService.convertToDTO(orderEntity);
 
         CreateResponse insertedResponse = orderService.createOrder(orderDTO, 500L).getBody();
 
         assert insertedResponse != null;
-        assertEquals (orderDTO.getAddress(), insertedResponse.getAddress());
+        assertEquals(orderDTO.getAddress(), insertedResponse.getAddress());
 
 
         orderService.deleteOrder(500L);
 
-        assertThrows (ValueNotPresentException.class, () -> orderService.getOrder(500L));
+        assertThrows(ValueNotPresentException.class, () -> orderService.getOrder(500L));
     }
 
-    public Optional<UserEntity> sampleUser (){
+    @Test
+    void getActiveOrdersNormal() {
+
+    }
+
+    public Optional<UserEntity> sampleUser() {
         List<OrderEntity> orderList = new ArrayList<>();
         UserEntity user = new UserEntity();
-        user.setId (500L).setOrderList(orderList);
+        user.setId(500L).setOrderList(orderList);
 
-        return Optional.of (user);
+        return Optional.of(user);
     }
 
-    public OrderEntity getSampleOrder(){
+    public OrderEntity getSampleOrder() {
         OrderTimeEntity orderTimeEntity = new OrderTimeEntity()
                 .setDeliverySlot(ZonedDateTime.ofInstant(
                         Instant.parse("2011-12-03T10:35:30.000Z"),

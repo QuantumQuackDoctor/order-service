@@ -103,7 +103,6 @@ public class OrderService {
         return ResponseEntity.ok(orderDTO);
     }
 
-
     public ResponseEntity<List<Order>> getActiveOrders(String sortType, Integer page, Integer size) {
         Iterable<OrderEntity> orderEntities = orderRepo.findAll();
         List<Order> orderDTOs = new ArrayList<>();
