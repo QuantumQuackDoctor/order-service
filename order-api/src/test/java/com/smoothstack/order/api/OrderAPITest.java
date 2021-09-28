@@ -8,7 +8,7 @@ import com.database.ormlibrary.order.OrderTimeEntity;
 import com.database.ormlibrary.order.PriceEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smoothstack.order.model.Order;
-import com.smoothstack.order.repo.*;
+import com.smoothstack.order.repo.RestaurantRepo;
 import com.smoothstack.order.service.OrderService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -22,19 +22,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class OrderAPITest {
+class OrderAPITest {
 
     @Autowired
     MockMvc mockMvc;
@@ -48,7 +43,7 @@ public class OrderAPITest {
     void apiTest() throws Exception {
         OrderEntity orderEntity = getSampleOrder();
 
-        Mockito.when (restaurantRepo.findById(Mockito.any())).thenReturn(Optional.of (new RestaurantEntity().setName("Sample Restaurant")));
+        Mockito.when(restaurantRepo.findById(Mockito.any())).thenReturn(Optional.of(new RestaurantEntity().setName("Sample Restaurant")));
 
         Order orderDTO = orderService.convertToDTO(orderEntity);
 
@@ -60,11 +55,17 @@ public class OrderAPITest {
                 .andExpect(status().isUnauthorized());
 
         mockMvc.perform(patch("/orders").content(objectMapper
-                .writeValueAsString(orderDTO)).contentType(MediaType.APPLICATION_JSON))
+                        .writeValueAsString(orderDTO)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(delete("/order").param("id","1"))
+        mockMvc.perform(delete("/order").param("id", "1"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void getActiveOrders() throws Exception {
+        mockMvc.perform(get("/orders/driver").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
     }
 
     public OrderEntity getSampleOrder() {

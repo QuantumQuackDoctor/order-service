@@ -1,28 +1,23 @@
 package com.smoothstack.order.service;
 
+import com.database.ormlibrary.driver.DriverEntity;
 import com.database.ormlibrary.food.MenuItemEntity;
+import com.database.ormlibrary.food.RestaurantEntity;
 import com.database.ormlibrary.order.FoodOrderEntity;
 import com.database.ormlibrary.order.OrderEntity;
 import com.database.ormlibrary.order.OrderTimeEntity;
 import com.database.ormlibrary.order.PriceEntity;
 import com.database.ormlibrary.user.UserEntity;
-import com.smoothstack.order.api.OrderApi;
 import com.smoothstack.order.exception.OrderTimeException;
 import com.smoothstack.order.exception.UserNotFoundException;
 import com.smoothstack.order.exception.ValueNotPresentException;
 import com.smoothstack.order.model.*;
 import com.smoothstack.order.repo.*;
-import io.swagger.annotations.ApiParam;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.context.request.NativeWebRequest;
 
-import javax.validation.Valid;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -55,16 +50,17 @@ public class OrderService {
     }
 
 
-    public ResponseEntity<Void> deleteOrder(Long id) throws ValueNotPresentException {
-        OrderEntity orderEntity = orderRepo.findById(id).isPresent() ?
-                orderRepo.findById(id).get() : null;
-        if (orderEntity == null) return new ResponseEntity<>(HttpStatus.OK);
-        List <FoodOrderEntity> foodOrderEntityList = orderEntity.getItems();
-        for (FoodOrderEntity foodOrderEntity : foodOrderEntityList)
-            foodOrderRepo.delete(foodOrderEntity);
+    public void deleteOrder(Long id) {
+        OrderEntity orderEntity = orderRepo.findById(id).isPresent() ? orderRepo.findById(id).get() : null;
+        if (orderEntity == null) {
+            new ResponseEntity<>(HttpStatus.OK);
+            return;
+        }
+        List<FoodOrderEntity> foodOrderEntityList = orderEntity.getItems();
+        foodOrderRepo.deleteAll(foodOrderEntityList);
         orderRepo.deleteById(id);
 
-        return new ResponseEntity<>(HttpStatus.OK);
+        ResponseEntity.ok(null);
     }
 
     public ResponseEntity<CreateResponse> createOrder(Order orderDTO,
@@ -101,27 +97,17 @@ public class OrderService {
     }
 
     public ResponseEntity<Order> getOrder(Long id) throws ValueNotPresentException {
-
-        Optional<OrderEntity> orderEntity = orderRepo.findById(id);
-        Order orderDTO = new Order();
-
-        try {
-            orderDTO = convertToDTO(orderEntity.get());
-        } catch (Exception e) {
+        Order orderDTO = orderRepo.findById(id).isPresent() ? convertToDTO(orderRepo.findById(id).get()) : null;
+        if (orderDTO == null)
             throw new ValueNotPresentException("No item of that id in the database");
-        }
-
-
         return ResponseEntity.ok(orderDTO);
     }
-
-
 
     public ResponseEntity<List<Order>> getActiveOrders(String sortType, Integer page, Integer size) {
         Iterable<OrderEntity> orderEntities = orderRepo.findAll();
         List<Order> orderDTOs = new ArrayList<>();
         for (OrderEntity orderEntity : orderEntities) {
-             if (orderEntity.getRefunded() == null || orderEntity.getRefunded() == false )
+            if (orderEntity.getRefunded() == null || !orderEntity.getRefunded())
                 orderDTOs.add(convertToDTO(orderEntity));
         }
 
@@ -132,14 +118,14 @@ public class OrderService {
     }
 
     public List<Order> pageList(List<Order> orders, Integer page, Integer size) {
-        if((page + 1) * size > orders.size()) {
+        if ((page + 1) * size > orders.size()) {
             return orders.subList(page * size, orders.size());
         }
         return orders.subList(page * size, (page + 1) * size);
     }
 
     public List<Order> sortList(List<Order> orders, String sortType) {
-        switch (sortType != null? sortType : "") {
+        switch (sortType != null ? sortType : "") {
             case "time":
                 orders = orders.stream().sorted((x, y) -> sortTime(y.getOrderTime().getDeliverySlot(), x.getOrderTime().getDeliverySlot())).collect(Collectors.toList());
                 break;
@@ -174,33 +160,6 @@ public class OrderService {
         return t1.toInstant().compareTo(t2.toInstant());
     }
 
-    public OrderEntity createSampleOrder() {
-        OrderTimeEntity orderTimeEntity = new OrderTimeEntity().setDeliverySlot(ZonedDateTime.parse("2011-12-03T10:15:30+01:00"))
-                .setRestaurantAccept(ZonedDateTime.parse("2011-12-03T10:35:30+01:00"));
-
-        List<MenuItemEntity> orderItemsEntities = new ArrayList<>();
-        MenuItemEntity menuItemEntity1 = new MenuItemEntity().setName("Sample Item 1");
-        MenuItemEntity menuItemEntity2 = new MenuItemEntity().setName("Sample Item 2");
-        orderItemsEntities.add(menuItemEntity1);
-        orderItemsEntities.add(menuItemEntity2);
-        menuItemRepo.save(menuItemEntity1);
-        menuItemRepo.save(menuItemEntity2);
-
-        FoodOrderEntity foodOrderEntity = new FoodOrderEntity().setId(1L).setOrderItems(orderItemsEntities).setRestaurantId(1L);
-        foodOrderRepo.save(foodOrderEntity);
-        List<FoodOrderEntity> foodOrderEntities = new ArrayList<>();
-        foodOrderEntities.add(foodOrderEntity);
-
-        PriceEntity priceEntity = new PriceEntity().setFood(23.09f);
-
-        OrderEntity orderEntity = new OrderEntity()
-                .setId(23L).setDelivery(true).setRefunded(false)
-                .setAddress("123 Street St").setOrderTimeEntity(orderTimeEntity)
-                .setItems(foodOrderEntities).setPriceEntity(priceEntity);
-
-        return orderRepo.save(orderEntity);
-    }
-
     public ResponseEntity<Void> patchOrders(Order order) {
         OrderEntity orderEntity = convertToEntity(order);
         orderRepo.save(orderEntity);
@@ -222,7 +181,8 @@ public class OrderService {
             orderItemsList = new ArrayList<>();
             OrderFood orderFood = modelMapper.map(foodOrderEntity, OrderFood.class);
             orderFood.setRestaurantId(String.valueOf(foodOrderEntity.getRestaurantId()));
-            orderFood.setRestaurantName(restaurantRepo.findById(foodOrderEntity.getRestaurantId()).get().getName());
+            Optional<RestaurantEntity> restaurantEntity = restaurantRepo.findById(foodOrderEntity.getRestaurantId());
+            orderFood.setRestaurantName(restaurantEntity.isPresent() ? restaurantEntity.get().getName() : "");
             orderFoodList.add(orderFood);
             for (MenuItemEntity menuItemEntity : foodOrderEntity.getOrderItems()) {
                 OrderItems orderItems = modelMapper.map(menuItemEntity, OrderItems.class);
@@ -242,16 +202,16 @@ public class OrderService {
     }
 
     public OrderOrderTime convertTimeToDTO(OrderTimeEntity orderTimeEntity) {
-
         OrderOrderTime orderTimeDTO = new OrderOrderTime();
+        String TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
         if (orderTimeEntity.getOrderComplete() != null) {
-            String orderComplete = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(
+            String orderComplete = DateTimeFormatter.ofPattern(TIME_FORMAT).format(
                     orderTimeEntity.getOrderComplete());
             orderTimeDTO.setDelivered(orderComplete);
         }
-        orderTimeDTO.setDeliverySlot(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(
+        orderTimeDTO.setDeliverySlot(DateTimeFormatter.ofPattern(TIME_FORMAT).format(
                 orderTimeEntity.getDeliverySlot()));
-        orderTimeDTO.setRestaurantAccept(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(
+        orderTimeDTO.setRestaurantAccept(DateTimeFormatter.ofPattern(TIME_FORMAT).format(
                 orderTimeEntity.getRestaurantAccept()));
 
         return orderTimeDTO;
@@ -261,30 +221,25 @@ public class OrderService {
         OrderEntity orderEntity = modelMapper.map(orderDTO, OrderEntity.class);
 
         if (orderDTO.getDriverId() != null) {
-            if (driverRepo.findById(Long.parseLong(orderDTO.getDriverId())).isPresent())
-                orderEntity.setDriver(driverRepo.findById(Long.parseLong(orderDTO.getDriverId())).get());
+            Optional<DriverEntity> driverEntity = driverRepo.findById(Long.parseLong(orderDTO.getDriverId()));
+            driverEntity.ifPresent(orderEntity::setDriver);
         }
 
         orderEntity.setDelivery(orderDTO.getOrderType().equals(Order.OrderTypeEnum.DELIVERY));
 
-       /* OrderOrderTime orderTimeDTO =
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyy-MM-dd'T'HH:mm:ss.SSSX");*/
-
         List<OrderFood> orderFoodList = orderDTO.getFood();
         List<FoodOrderEntity> foodOrderEntities = new ArrayList<>();
 
-        if (orderFoodList != null && orderFoodList.size() > 0) {
+        if (orderFoodList != null && !orderFoodList.isEmpty()) {
             //finds order lists from all restaurants
-
             for (OrderFood orderFood : orderFoodList) {
                 List<MenuItemEntity> itemEntities = new ArrayList<>();
                 //populates a specific order list with items
 
                 for (OrderItems orderItemDTO : orderFood.getItems()) {
 
-                    if (menuItemRepo.findById(Long.parseLong(orderItemDTO.getId())).isPresent()) {
-                        itemEntities.add(menuItemRepo.findById(Long.parseLong(orderItemDTO.getId())).get());
-                    }
+                    Optional<MenuItemEntity> menuItemEntity = menuItemRepo.findById(Long.parseLong(orderItemDTO.getId()));
+                    menuItemEntity.ifPresent(itemEntities::add);
 
                 }
                 FoodOrderEntity foodOrderEntity = new FoodOrderEntity();
@@ -302,15 +257,6 @@ public class OrderService {
 
         }
         return orderEntity;
-    }
-
-    public void insertSampleMenuItems(){
-        MenuItemEntity menuItemEntity1 = new MenuItemEntity().setName("Sample Item 1").setId(1L).setPrice(5.3f);
-        MenuItemEntity menuItemEntity2 = new MenuItemEntity().setName("Sample Item 2").setId(2L).setPrice(3.5f);
-        if (!menuItemRepo.findById(1L).isPresent())
-            menuItemRepo.save(menuItemEntity1);
-        if (!menuItemRepo.findById(2L).isPresent())
-            menuItemRepo.save(menuItemEntity2);
     }
 
 }
