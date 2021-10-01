@@ -1,8 +1,5 @@
     pipeline {
         agent any
-        environment {
-            AWS_REGION = 'us-east-2'
-        }
         tools {
             maven "Maven"
         }
@@ -40,12 +37,24 @@
                         withCredentials([string(credentialsId:'cfe0c5bd-0177-404d-83e1-bbb3044b52d0', variable:'AWS_ID')])
                         {
                             sh 'aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com'
-                            sh 'docker build -t java-order-service .'
-                            sh 'docker tag java-order-service:latest ${AWS_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/java-order-service:latest'
-                            sh 'docker push ${AWS_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/java-order-service:latest'
+                            sh 'docker build -t order-service .'
+                            sh 'docker tag order-service:latest ${AWS_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/order-service:latest'
+                            sh 'docker push ${AWS_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/order-service:latest'
                         }
                     }
                 }
             }
+        stage('Template Update'){
+            steps {
+                sh 'aws cloudformation deploy --stack-name OrderServiceStack --region "${AWS_REGION}" --template-file orderService.template --parameter-overrides ImageURL="${AWS_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/order-service:latest" BaseStackName=BaseInfrastructure  --capabilities CAPABILITY_NAMED_IAM'
+            }
+        }
+        }
+    post {
+        success {
+            script {
+                sh 'docker image prune -f -a'
+            }
         }
     }
+}
