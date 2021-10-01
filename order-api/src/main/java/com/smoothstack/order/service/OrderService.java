@@ -123,7 +123,7 @@ public class OrderService {
         Iterable<OrderEntity> orderEntities = orderRepo.findAll();
         List<Order> orderDTOs = new ArrayList<>();
         for (OrderEntity orderEntity : orderEntities) {
-            if (orderEntity.getRefunded() == null || orderEntity.getRefunded() == false)
+            if (orderEntity.getRefunded() == null || !orderEntity.getRefunded())
                 orderDTOs.add(convertToDTO(orderEntity));
         }
 
