@@ -46,7 +46,10 @@
             }
             stage('Template Update'){
                 steps {
-                    sh 'aws cloudformation deploy --stack-name OrderServiceStack --region "${AWS_REGION}" --template-file orderService.template --parameter-overrides ImageURL="${AWS_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/order-service:latest" BaseStackName=BaseInfrastructure --capabilities CAPABILITY_NAMED_IAM'
+                    withCredentials ([string(credentialsId:'cfe0c5bd-0177-404d-83e1-bbb3044b52d0', variable:'AWS_ID')])
+                    {
+                        sh 'aws cloudformation deploy --stack-name OrderServiceStack --region "${AWS_REGION}" --template-file orderService.template --parameter-overrides ImageURL="${AWS_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/order-service:latest" BaseStackName=BaseInfrastructure --capabilities CAPABILITY_NAMED_IAM'
+                    }
                 }
             }
         }
