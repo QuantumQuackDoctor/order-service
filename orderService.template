@@ -95,7 +95,7 @@ Resources:
     Type: 'AWS::ECS::Service'
     Properties:
       Cluster: 
-	    Fn::ImportValue: !Sub "${BaseStackName}-ECSClusterName"
+        Fn::ImportValue: !Sub "${BaseStackName}-ECSClusterName"
       LaunchType: FARGATE
       DesiredCount: 1
       ServiceName: OrderService
@@ -103,7 +103,7 @@ Resources:
         - ContainerName: OrderApp
           ContainerPort: 8080
           TargetGroupArn:
-		    Fn::ImportValue: !Sub "${AWS::StackName}-OrderTGArn"
+	        Fn::ImportValue: !Sub "${AWS::StackName}-OrderTGArn"
       TaskDefinition: !Ref OrderTaskDefinition
       NetworkConfiguration:
         AwsvpcConfiguration:
@@ -111,8 +111,8 @@ Resources:
             - Fn::ImportValue: !Sub "${BaseStackName}-ServiceSecurityGroup"
           Subnets:
             - Fn::ImportValue: !Sub "${BaseStackName}-PrivateSubnet1"
-			- Fn::ImportValue: !Sub "${BaseStackName}-PrivateSubnet2"
-ListenerRule:
+            - Fn::ImportValue: !Sub "${BaseStackName}-PrivateSubnet2"
+  ListenerRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
       Actions:
