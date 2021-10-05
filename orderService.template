@@ -5,7 +5,6 @@ Parameters:
     Type: String
   BaseStackName:
     Type: String
-	
 Resources:
   OrderServiceLogGroup:
     Type: AWS::Logs::LogGroup
@@ -92,7 +91,6 @@ Resources:
         - FARGATE
       TaskRoleArn: !GetAtt TaskRole.Arn
       ExecutionRoleArn: !Sub 'arn:aws:iam::@{AWS::AccountId}:role/ecsTaskExecutionRole'
-		
   OrderService:
     Type: 'AWS::ECS::Service'
     Properties:
