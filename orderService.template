@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: "user service template for use with jenkins"
+Description: "order service template for use with jenkins"
 Parameters:
   ImageURL:
     Type: String
