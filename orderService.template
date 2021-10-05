@@ -90,7 +90,7 @@ Resources:
       RequiresCompatibilities:
         - FARGATE
       TaskRoleArn: !GetAtt TaskRole.Arn
-      ExecutionRoleArn: !Sub 'arn:aws:iam::@{AWS::AccountId}:role/ecsTaskExecutionRole'
+      ExecutionRoleArn: !Sub 'arn:aws:iam::${AWS::AccountId}:role/ecsTaskExecutionRole'
   OrderService:
     Type: 'AWS::ECS::Service'
     Properties:
