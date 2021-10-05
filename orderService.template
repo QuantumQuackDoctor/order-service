@@ -103,7 +103,7 @@ Resources:
         - ContainerName: OrderApp
           ContainerPort: 8080
           TargetGroupArn:
-	        Fn::ImportValue: !Sub "${AWS::StackName}-OrderTGArn"
+            Fn::ImportValue: !Sub "${AWS::StackName}-OrderTGArn"
       TaskDefinition: !Ref OrderTaskDefinition
       NetworkConfiguration:
         AwsvpcConfiguration:
