@@ -3,8 +3,6 @@ Description: "order service template for use with jenkins"
 Parameters:
   ImageURL:
     Type: String
-  BaseStackName:
-    Type: String
 Resources:
   OrderServiceLogGroup:
     Type: AWS::Logs::LogGroup
