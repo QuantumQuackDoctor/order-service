@@ -118,8 +118,7 @@ Resources:
     Properties:
       Actions:
         - Type: forward
-          TargetGroupArn:
-            Fn::ImportValue: !Sub "${BaseStackName}-OrderTGArn"
+          TargetGroupArn: "{{resolve:secretsmanager:UserTGArn}}"
       Conditions:
         - Field: path-pattern
           PathPatternConfig:
@@ -127,5 +126,4 @@ Resources:
               - /order/*
               - /orders/*
       Priority: 5
-      ListenerArn:
-        Fn::ImportValue: !Sub "${BaseStackName}-LBListenerARN"
+      ListenerArn: "{{resolve:secretsmanager:LBListenerARN}}"
