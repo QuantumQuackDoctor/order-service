@@ -70,7 +70,7 @@ Resources:
               Protocol: tcp
           Environment:
             - Name: SPRING_APPLICATION_JSON
-              Value: >
+              Value: !Sub >
                 {
                   "spring":{
                       "datasource":{
@@ -102,28 +102,28 @@ Resources:
   OrderService:
     Type: "AWS::ECS::Service"
     Properties:
-      Cluster: "{{resolve:secretsmanager:ECSClusterName-${Environment}}}"
+      Cluster: !Sub "{{resolve:secretsmanager:ECSClusterName-${Environment}}}"
       LaunchType: FARGATE
       DesiredCount: 1
       ServiceName: OrderService
       LoadBalancers:
         - ContainerName: OrderApp
           ContainerPort: 8080
-          TargetGroupArn: "{{resolve:secretsmanager:UserTGArn-${Environment}}}"
+          TargetGroupArn: !Sub "{{resolve:secretsmanager:UserTGArn-${Environment}}}"
       TaskDefinition: !Ref OrderTaskDefinition
       NetworkConfiguration:
         AwsvpcConfiguration:
           SecurityGroups:
-            - "{{resolve:secretsmanager:ServiceSecurityGroup-${Environment}}}"
+            - !Sub "{{resolve:secretsmanager:ServiceSecurityGroup-${Environment}}}"
           Subnets:
-            - "{{resolve:secretsmanager:PrivateSubnet1-${Environment}}}"
-            - "{{resolve:secretsmanager:PrivateSubnet2-${Environment}}}"
+            - !Sub "{{resolve:secretsmanager:PrivateSubnet1-${Environment}}}"
+            - !Sub "{{resolve:secretsmanager:PrivateSubnet2-${Environment}}}"
   ListenerRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
       Actions:
         - Type: forward
-          TargetGroupArn: "{{resolve:secretsmanager:UserTGArn-${Environment}}}"
+          TargetGroupArn: !Sub "{{resolve:secretsmanager:UserTGArn-${Environment}}}"
       Conditions:
         - Field: path-pattern
           PathPatternConfig:
@@ -131,4 +131,4 @@ Resources:
               - /order/*
               - /orders/*
       Priority: 5
-      ListenerArn: "{{resolve:secretsmanager:LBListenerARN-${Environment}}}"
+      ListenerArn: !Sub "{{resolve:secretsmanager:LBListenerARN-${Environment}}}"
