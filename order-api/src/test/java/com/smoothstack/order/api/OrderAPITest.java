@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class OrderAPITest {
+class OrderAPITest {
 
     @Autowired
     MockMvc mockMvc;
@@ -43,7 +43,7 @@ public class OrderAPITest {
     void apiTest() throws Exception {
         OrderEntity orderEntity = getSampleOrder();
 
-        Mockito.when (restaurantRepo.findById(Mockito.any())).thenReturn(Optional.of (new RestaurantEntity().setName("Sample Restaurant")));
+        Mockito.when(restaurantRepo.findById(Mockito.any())).thenReturn(Optional.of(new RestaurantEntity().setName("Sample Restaurant")));
 
         Order orderDTO = orderService.convertToDTO(orderEntity);
 
@@ -55,11 +55,17 @@ public class OrderAPITest {
                 .andExpect(status().isUnauthorized());
 
         mockMvc.perform(patch("/orders").content(objectMapper
-                .writeValueAsString(orderDTO)).contentType(MediaType.APPLICATION_JSON))
+                        .writeValueAsString(orderDTO)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(delete("/order").param("id","1"))
+        mockMvc.perform(delete("/order").param("id", "1"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void getActiveOrders() throws Exception {
+        mockMvc.perform(get("/orders/driver").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
     }
 
     public OrderEntity getSampleOrder() {

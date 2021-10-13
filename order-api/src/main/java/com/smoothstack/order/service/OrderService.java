@@ -2,12 +2,15 @@ package com.smoothstack.order.service;
 
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
 import com.amazonaws.services.simpleemail.model.*;
+import com.database.ormlibrary.driver.DriverEntity;
 import com.database.ormlibrary.food.MenuItemEntity;
+import com.database.ormlibrary.food.RestaurantEntity;
 import com.database.ormlibrary.order.FoodOrderEntity;
 import com.database.ormlibrary.order.OrderEntity;
 import com.database.ormlibrary.order.OrderTimeEntity;
 import com.database.ormlibrary.order.PriceEntity;
 import com.database.ormlibrary.user.UserEntity;
+import com.smoothstack.order.api.OrderApi;
 import com.smoothstack.order.exception.OrderTimeException;
 import com.smoothstack.order.exception.UserNotFoundException;
 import com.smoothstack.order.exception.ValueNotPresentException;
@@ -58,16 +61,18 @@ public class OrderService {
         this.modelMapper = new ModelMapper();
     }
 
-    public ResponseEntity<Void> deleteOrder(Long id) throws ValueNotPresentException {
-        OrderEntity orderEntity = orderRepo.findById(id).isPresent() ?
-                orderRepo.findById(id).get() : null;
-        if (orderEntity == null) return new ResponseEntity<>(HttpStatus.OK);
+
+    public void deleteOrder(Long id) {
+        OrderEntity orderEntity = orderRepo.findById(id).isPresent() ? orderRepo.findById(id).get() : null;
+        if (orderEntity == null) {
+            new ResponseEntity<>(HttpStatus.OK);
+            return;
+        }
         List<FoodOrderEntity> foodOrderEntityList = orderEntity.getItems();
-        for (FoodOrderEntity foodOrderEntity : foodOrderEntityList)
-            foodOrderRepo.delete(foodOrderEntity);
+        foodOrderRepo.deleteAll(foodOrderEntityList);
         orderRepo.deleteById(id);
 
-        return new ResponseEntity<>(HttpStatus.OK);
+        ResponseEntity.ok(null);
     }
 
     public ResponseEntity<CreateResponse> createOrder(Order orderDTO,
@@ -104,17 +109,9 @@ public class OrderService {
     }
 
     public ResponseEntity<Order> getOrder(Long id) throws ValueNotPresentException {
-
-        Optional<OrderEntity> orderEntity = orderRepo.findById(id);
-        Order orderDTO = new Order();
-
-        try {
-            orderDTO = convertToDTO(orderEntity.get());
-        } catch (Exception e) {
+        Order orderDTO = orderRepo.findById(id).isPresent() ? convertToDTO(orderRepo.findById(id).get()) : null;
+        if (orderDTO == null)
             throw new ValueNotPresentException("No item of that id in the database");
-        }
-
-
         return ResponseEntity.ok(orderDTO);
     }
 
@@ -197,7 +194,8 @@ public class OrderService {
             orderItemsList = new ArrayList<>();
             OrderFood orderFood = modelMapper.map(foodOrderEntity, OrderFood.class);
             orderFood.setRestaurantId(String.valueOf(foodOrderEntity.getRestaurantId()));
-            orderFood.setRestaurantName(restaurantRepo.findById(foodOrderEntity.getRestaurantId()).get().getName());
+            Optional<RestaurantEntity> restaurantEntity = restaurantRepo.findById(foodOrderEntity.getRestaurantId());
+            orderFood.setRestaurantName(restaurantEntity.isPresent() ? restaurantEntity.get().getName() : "");
             orderFoodList.add(orderFood);
             for (MenuItemEntity menuItemEntity : foodOrderEntity.getOrderItems()) {
                 OrderItems orderItems = modelMapper.map(menuItemEntity, OrderItems.class);
@@ -217,16 +215,16 @@ public class OrderService {
     }
 
     public OrderOrderTime convertTimeToDTO(OrderTimeEntity orderTimeEntity) {
-
         OrderOrderTime orderTimeDTO = new OrderOrderTime();
+        String TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
         if (orderTimeEntity.getOrderComplete() != null) {
-            String orderComplete = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(
+            String orderComplete = DateTimeFormatter.ofPattern(TIME_FORMAT).format(
                     orderTimeEntity.getOrderComplete());
             orderTimeDTO.setDelivered(orderComplete);
         }
-        orderTimeDTO.setDeliverySlot(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(
+        orderTimeDTO.setDeliverySlot(DateTimeFormatter.ofPattern(TIME_FORMAT).format(
                 orderTimeEntity.getDeliverySlot()));
-        orderTimeDTO.setRestaurantAccept(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(
+        orderTimeDTO.setRestaurantAccept(DateTimeFormatter.ofPattern(TIME_FORMAT).format(
                 orderTimeEntity.getRestaurantAccept()));
 
         return orderTimeDTO;
@@ -236,30 +234,25 @@ public class OrderService {
         OrderEntity orderEntity = modelMapper.map(orderDTO, OrderEntity.class);
 
         if (orderDTO.getDriverId() != null) {
-            if (driverRepo.findById(Long.parseLong(orderDTO.getDriverId())).isPresent())
-                orderEntity.setDriver(driverRepo.findById(Long.parseLong(orderDTO.getDriverId())).get());
+            Optional<DriverEntity> driverEntity = driverRepo.findById(Long.parseLong(orderDTO.getDriverId()));
+            driverEntity.ifPresent(orderEntity::setDriver);
         }
 
         orderEntity.setDelivery(orderDTO.getOrderType().equals(Order.OrderTypeEnum.DELIVERY));
 
-       /* OrderOrderTime orderTimeDTO =
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyy-MM-dd'T'HH:mm:ss.SSSX");*/
-
         List<OrderFood> orderFoodList = orderDTO.getFood();
         List<FoodOrderEntity> foodOrderEntities = new ArrayList<>();
 
-        if (orderFoodList != null && orderFoodList.size() > 0) {
+        if (orderFoodList != null && !orderFoodList.isEmpty()) {
             //finds order lists from all restaurants
-
             for (OrderFood orderFood : orderFoodList) {
                 List<MenuItemEntity> itemEntities = new ArrayList<>();
                 //populates a specific order list with items
 
                 for (OrderItems orderItemDTO : orderFood.getItems()) {
 
-                    if (menuItemRepo.findById(Long.parseLong(orderItemDTO.getId())).isPresent()) {
-                        itemEntities.add(menuItemRepo.findById(Long.parseLong(orderItemDTO.getId())).get());
-                    }
+                    Optional<MenuItemEntity> menuItemEntity = menuItemRepo.findById(Long.parseLong(orderItemDTO.getId()));
+                    menuItemEntity.ifPresent(itemEntities::add);
 
                 }
                 FoodOrderEntity foodOrderEntity = new FoodOrderEntity();
