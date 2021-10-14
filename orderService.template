@@ -80,7 +80,7 @@ Resources:
                       }
                   },
                   "jwt":{
-                      "secret":"SECRET"
+                      "secret":"{{resolve:secretsmanager:JwtSecret-${Environment}}}"
                   },
                   "server":{
                       "port":"8080"
