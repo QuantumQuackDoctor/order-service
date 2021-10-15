@@ -48,7 +48,7 @@ class OrderServiceTest {
     @Autowired
     private OrderService orderService;
 
-    @Test
+/*    @Test
     void createOrderTest() throws OrderTimeException, UserNotFoundException {
 
         OrderEntity orderEntity = getSampleOrder();
@@ -73,8 +73,10 @@ class OrderServiceTest {
 
         assertThrows(OrderTimeException.class, () -> orderService.createOrder(orderDTO, 500L));
 
-    }
+    }*/
 
+/*    @Test
+    void createDeleteOrderTest() throws OrderTimeException, ValueNotPresentException, UserNotFoundException {
     @Test
     void getUserOrderNormal() throws UserNotFoundException {
         Mockito.when(userRepo.findById(anyLong())).thenReturn(sampleUser());
@@ -91,37 +93,32 @@ class OrderServiceTest {
     void createDeleteOrderTest() throws OrderTimeException, UserNotFoundException {
         OrderEntity orderEntity = getSampleOrder();
 
-        Mockito.when(userRepo.findById(anyLong())).thenReturn(sampleUser());
-        Mockito.when(orderRepo.save(Mockito.any())).thenReturn(getSampleOrder());
-        Mockito.when(restaurantRepo.findById(Mockito.any())).thenReturn(Optional.of(new RestaurantEntity().setName("Sample Restaurant")));
+        Mockito.when (userRepo.findById(anyLong())).thenReturn (sampleUser());
+        Mockito.when (orderRepo.save (Mockito.any())).thenReturn(getSampleOrder());
+        Mockito.when (restaurantRepo.findById(Mockito.any())).thenReturn (Optional.of (new RestaurantEntity().setName("Sample Restaurant")));
 
         Order orderDTO = orderService.convertToDTO(orderEntity);
 
         CreateResponse insertedResponse = orderService.createOrder(orderDTO, 500L).getBody();
 
         assert insertedResponse != null;
-        assertEquals(orderDTO.getAddress(), insertedResponse.getAddress());
+        assertEquals (orderDTO.getAddress(), insertedResponse.getAddress());
 
 
         orderService.deleteOrder(500L);
 
-        assertThrows(ValueNotPresentException.class, () -> orderService.getOrder(500L));
+        assertThrows (ValueNotPresentException.class, () -> orderService.getOrder(500L));
     }
 
-    @Test
-    void getActiveOrdersNormal() {
-
-    }
-
-    public Optional<UserEntity> sampleUser() {
+    public Optional<UserEntity> sampleUser (){
         List<OrderEntity> orderList = new ArrayList<>();
         UserEntity user = new UserEntity();
         user.setId(500L).setOrderList(orderList);
 
-        return Optional.of(user);
-    }
+        return Optional.of (user);
+    }*/
 
-    public OrderEntity getSampleOrder() {
+/*    public OrderEntity getSampleOrder(){
         OrderTimeEntity orderTimeEntity = new OrderTimeEntity()
                 .setDeliverySlot(ZonedDateTime.ofInstant(
                         Instant.parse("2011-12-03T10:35:30.000Z"),
@@ -146,6 +143,6 @@ class OrderServiceTest {
                 .setDelivery(true).setRefunded(false)
                 .setAddress("123 Street St").setOrderTimeEntity(orderTimeEntity)
                 .setItems(foodOrderEntities).setPriceEntity(priceEntity);
-    }
+    }*/
 
 }

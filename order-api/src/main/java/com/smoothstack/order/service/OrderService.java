@@ -4,13 +4,11 @@ import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
 import com.amazonaws.services.simpleemail.model.*;
 import com.database.ormlibrary.driver.DriverEntity;
 import com.database.ormlibrary.food.MenuItemEntity;
-import com.database.ormlibrary.food.RestaurantEntity;
 import com.database.ormlibrary.order.FoodOrderEntity;
 import com.database.ormlibrary.order.OrderEntity;
 import com.database.ormlibrary.order.OrderTimeEntity;
 import com.database.ormlibrary.order.PriceEntity;
 import com.database.ormlibrary.user.UserEntity;
-import com.smoothstack.order.api.OrderApi;
 import com.smoothstack.order.exception.OrderTimeException;
 import com.smoothstack.order.exception.UserNotFoundException;
 import com.smoothstack.order.exception.ValueNotPresentException;
@@ -27,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -75,23 +74,19 @@ public class OrderService {
         ResponseEntity.ok(null);
     }
 
-    public ResponseEntity<CreateResponse> createOrder(Order orderDTO,
-                                                      Long userId) throws OrderTimeException, UserNotFoundException {
+    public ResponseEntity<CreateResponse> createOrder(Order orderDTO, Long userId) throws OrderTimeException, UserNotFoundException {
         OrderEntity orderEntity = convertToEntity(orderDTO);
         orderEntity.setActive(true);
+        if (userRepo.findById(userId).isPresent())
+            orderEntity.setUser(userRepo.findById(userId).get());
+        else
+            throw new UserNotFoundException("User not found");
+
         if (orderEntity.getDelivery()) {
             ZonedDateTime deliverySlot = orderEntity.getOrderTimeEntity().getDeliverySlot();
             ZonedDateTime restaurantAccept = orderEntity.getOrderTimeEntity().getRestaurantAccept();
             long diff = ChronoUnit.MINUTES.between(restaurantAccept, deliverySlot);
             if (diff < 15) throw new OrderTimeException("Time slot too early");
-        }
-
-
-        Optional<UserEntity> userEntityOptional = userRepo.findById(userId);
-        if (userEntityOptional.isPresent()) {
-            userEntityOptional.get().getOrderList().add(orderEntity);
-        } else {
-            throw new UserNotFoundException("User not found.");
         }
         orderRepo.save(orderEntity);
         return ResponseEntity.ok(new CreateResponse().type(CreateResponse.TypeEnum.STRIPE)
@@ -102,7 +97,8 @@ public class OrderService {
         Optional<UserEntity> userEntityOptional = userRepo.findById(userId);
         if (userEntityOptional.isPresent()) {
             List<Order> orderList = new ArrayList<>();
-            userEntityOptional.get().getOrderList().forEach(orderEntity -> orderList.add(convertToDTO(orderEntity)));
+            orderRepo.getOrderByUser(userId).forEach(orderEntity ->
+                    orderList.add(convertToDTO(orderEntity)));
             return orderList;
         }
         throw new UserNotFoundException("User not found!");
@@ -114,7 +110,6 @@ public class OrderService {
             throw new ValueNotPresentException("No item of that id in the database");
         return ResponseEntity.ok(orderDTO);
     }
-
 
     public ResponseEntity<List<Order>> getActiveOrders(String sortType, Integer page, Integer size) {
         Iterable<OrderEntity> orderEntities = orderRepo.findAll();
@@ -188,19 +183,21 @@ public class OrderService {
         if (orderEntity.getDriver() != null) orderDTO.setDriverId(String.valueOf(orderEntity.getDriver().getId()));
         List<FoodOrderEntity> foodOrderEntities = orderEntity.getItems();
         List<OrderFood> orderFoodList = new ArrayList<>();
-        List<OrderItems> orderItemsList;
+        List<OrderItems> orderItemsList = new ArrayList<>();
 
         for (FoodOrderEntity foodOrderEntity : foodOrderEntities) {
-            orderItemsList = new ArrayList<>();
-            OrderFood orderFood = modelMapper.map(foodOrderEntity, OrderFood.class);
-            orderFood.setRestaurantId(String.valueOf(foodOrderEntity.getRestaurantId()));
-            Optional<RestaurantEntity> restaurantEntity = restaurantRepo.findById(foodOrderEntity.getRestaurantId());
-            orderFood.setRestaurantName(restaurantEntity.isPresent() ? restaurantEntity.get().getName() : "");
-            orderFoodList.add(orderFood);
-            for (MenuItemEntity menuItemEntity : foodOrderEntity.getOrderItems()) {
-                OrderItems orderItems = modelMapper.map(menuItemEntity, OrderItems.class);
-                orderItems.setId(String.valueOf(menuItemEntity.getId()));
-                orderItemsList.add(orderItems);
+
+            OrderFood orderFood = new OrderFood();
+            orderFood.setRestaurantId(String.valueOf(foodOrderEntity.getRestaurant()));
+            orderFood.setRestaurantName(foodOrderEntity.getRestaurant().getName());
+
+            if (!orderFoodList.contains(orderFood)) {
+                List<OrderItems> newOrderItems = new ArrayList<>();
+                newOrderItems.add(convertItemToDTO(foodOrderEntity.getMenuItem()));
+                orderFood.setItems(newOrderItems);
+                orderFoodList.add(orderFood);
+            } else {
+                orderFoodList.get(orderFoodList.indexOf(orderFood)).getItems().add(convertItemToDTO(foodOrderEntity.getMenuItem()));
             }
             orderFood.setItems(orderItemsList);
         }
@@ -212,6 +209,12 @@ public class OrderService {
 
         return orderDTO;
 
+    }
+
+    public OrderItems convertItemToDTO(MenuItemEntity entity) {
+        OrderItems orderItems = modelMapper.map(entity, OrderItems.class);
+        orderItems.setId(String.valueOf(entity.getId()));
+        return orderItems;
     }
 
     public OrderOrderTime convertTimeToDTO(OrderTimeEntity orderTimeEntity) {
@@ -246,19 +249,14 @@ public class OrderService {
         if (orderFoodList != null && !orderFoodList.isEmpty()) {
             //finds order lists from all restaurants
             for (OrderFood orderFood : orderFoodList) {
-                List<MenuItemEntity> itemEntities = new ArrayList<>();
                 //populates a specific order list with items
-
                 for (OrderItems orderItemDTO : orderFood.getItems()) {
-
-                    Optional<MenuItemEntity> menuItemEntity = menuItemRepo.findById(Long.parseLong(orderItemDTO.getId()));
-                    menuItemEntity.ifPresent(itemEntities::add);
-
+                    if (menuItemRepo.findById(Long.parseLong(orderItemDTO.getId())).isPresent()) {
+                        FoodOrderEntity foodOrderEntity = new FoodOrderEntity();
+                        foodOrderEntity.setRestaurant(restaurantRepo.findById(Long.parseLong(orderFood.getRestaurantId())).orElse(null));
+                        foodOrderEntity.setMenuItem(menuItemRepo.findById(Long.parseLong(orderItemDTO.getId())).get());
+                    }
                 }
-                FoodOrderEntity foodOrderEntity = new FoodOrderEntity();
-                foodOrderEntity.setOrderItems(itemEntities);
-                foodOrderEntity.setRestaurantId(Long.parseLong(orderFood.getRestaurantId()));
-                foodOrderEntities.add(foodOrderEntity);
             }
             orderEntity.setItems(foodOrderEntities);
             orderEntity.setOrderTimeEntity(new OrderTimeEntity().setDeliverySlot(
@@ -295,36 +293,41 @@ public class OrderService {
         return chargeResponse;
     }
 
-    public Order sendOrderConfirmation(Long orderId, Long userId) {
+    public Order sendOrderConfirmation(Long orderId, Long userId) throws UserNotFoundException {
         StringBuilder builder = new StringBuilder();
-        UserEntity entity = userRepo.findById(userId).get();
-        if (entity.getSettings().getNotifications().getEmail()) {
-            String emailTo = entity.getEmail();
-            Order order = convertToDTO(orderRepo.findById(orderId).orElse(null));
-            builder.append("<h1>Scrumptious Order Confirmation: <h1> \n <strong>Order Items: </strong>");
-            for (OrderFood orderFood : order.getFood()) {
-                builder.append("<p>").append(orderFood.getRestaurantName()).append(": ");
-                List<OrderItems> itemsList = orderFood.getItems();
-                for (int i = 0; i < itemsList.size(); i++) {
-                    if (i < itemsList.size() - 1)
-                        builder.append(itemsList.get(i).getName()).append(", ");
-                    else
-                        builder.append(itemsList.get(i).getName());
+        Optional <UserEntity> userEntityOptional = userRepo.findById(userId);
+        if (userEntityOptional.isPresent()){
+            UserEntity entity = userEntityOptional.get();
+            if (entity.getSettings().getNotifications().getEmail()) {
+                String emailTo = entity.getEmail();
+                Order order = convertToDTO(orderRepo.findById(orderId).orElse(null));
+                builder.append("<h1>Scrumptious Order Confirmation: <h1> \n <strong>Order Items: </strong>");
+                for (OrderFood orderFood : order.getFood()) {
+                    builder.append("<p>").append(orderFood.getRestaurantName()).append(": ");
+                    List<OrderItems> itemsList = orderFood.getItems();
+                    for (int i = 0; i < itemsList.size(); i++) {
+                        if (i < itemsList.size() - 1)
+                            builder.append(itemsList.get(i).getName()).append(", ");
+                        else
+                            builder.append(itemsList.get(i).getName());
+                    }
+                    builder.append("<p>");
                 }
-                builder.append("<p>");
-            }
-            BigDecimal price = order.getPrice().getFood().divide(new BigDecimal("100"));
-            builder.append("<b>Total: </b> $").append(price);
-            String htmlBody = builder.toString();
+                BigDecimal price = order.getPrice().getFood().divide(new BigDecimal("100"), 2, RoundingMode.UNNECESSARY);
+                builder.append("<b>Total: </b> $").append(price);
+                String htmlBody = builder.toString();
 
-            SendEmailRequest request = new SendEmailRequest()
-                    .withDestination(new Destination().withToAddresses(emailTo))
-                    .withMessage(new Message()
-                            .withBody(new Body()
-                                    .withHtml(new Content().withCharset("UTF-8").withData(htmlBody))).withSubject(new Content()
-                                    .withCharset("UTF-8").withData("Scrumptious Order Confirmation"))).withSource(emailFrom);
-            emailService.sendEmail(request);
-            return order;
-        }return null;
+                SendEmailRequest request = new SendEmailRequest()
+                        .withDestination(new Destination().withToAddresses(emailTo))
+                        .withMessage(new Message()
+                                .withBody(new Body()
+                                        .withHtml(new Content().withCharset("UTF-8").withData(htmlBody))).withSubject(new Content()
+                                        .withCharset("UTF-8").withData("Scrumptious Order Confirmation"))).withSource(emailFrom);
+                emailService.sendEmail(request);
+                return order;
+            }
+            return null;
+        }
+        throw new UserNotFoundException("User not found!");
     }
 }

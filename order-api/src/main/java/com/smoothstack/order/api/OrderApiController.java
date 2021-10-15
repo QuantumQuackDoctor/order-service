@@ -90,7 +90,7 @@ public class OrderApiController implements OrderApi {
 
     @PreAuthorize("hasAuthority(('user'))")
     @PostMapping ("/order/email-order")
-    public ResponseEntity<Order> sendOrderConfirmation (@Valid @RequestBody CreateResponse createResponse, Authentication authentication){
+    public ResponseEntity<Order> sendOrderConfirmation (@Valid @RequestBody CreateResponse createResponse, Authentication authentication) throws UserNotFoundException {
         AuthDetails authDetails = (AuthDetails) authentication.getPrincipal();
         return ResponseEntity.ok().body(this.orderService.sendOrderConfirmation(Long.parseLong(createResponse.getId()), authDetails.getId()));
     }
