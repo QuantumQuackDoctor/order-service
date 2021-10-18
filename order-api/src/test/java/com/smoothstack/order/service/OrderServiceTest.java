@@ -48,7 +48,7 @@ class OrderServiceTest {
     @Autowired
     private OrderService orderService;
 
-/*    @Test
+    @Test
     void createOrderTest() throws OrderTimeException, UserNotFoundException {
 
         OrderEntity orderEntity = getSampleOrder();
@@ -73,10 +73,8 @@ class OrderServiceTest {
 
         assertThrows(OrderTimeException.class, () -> orderService.createOrder(orderDTO, 500L));
 
-    }*/
+    }
 
-/*    @Test
-    void createDeleteOrderTest() throws OrderTimeException, ValueNotPresentException, UserNotFoundException {
     @Test
     void getUserOrderNormal() throws UserNotFoundException {
         Mockito.when(userRepo.findById(anyLong())).thenReturn(sampleUser());
@@ -93,32 +91,30 @@ class OrderServiceTest {
     void createDeleteOrderTest() throws OrderTimeException, UserNotFoundException {
         OrderEntity orderEntity = getSampleOrder();
 
-        Mockito.when (userRepo.findById(anyLong())).thenReturn (sampleUser());
-        Mockito.when (orderRepo.save (Mockito.any())).thenReturn(getSampleOrder());
-        Mockito.when (restaurantRepo.findById(Mockito.any())).thenReturn (Optional.of (new RestaurantEntity().setName("Sample Restaurant")));
+        Mockito.when(userRepo.findById(anyLong())).thenReturn(sampleUser());
+        Mockito.when(orderRepo.save(Mockito.any())).thenReturn(getSampleOrder());
+        Mockito.when(restaurantRepo.findById(Mockito.any())).thenReturn(Optional.of(new RestaurantEntity().setName("Sample Restaurant")));
 
         Order orderDTO = orderService.convertToDTO(orderEntity);
 
         CreateResponse insertedResponse = orderService.createOrder(orderDTO, 500L).getBody();
 
         assert insertedResponse != null;
-        assertEquals (orderDTO.getAddress(), insertedResponse.getAddress());
+        assertEquals(orderDTO.getAddress(), insertedResponse.getAddress());
 
 
         orderService.deleteOrder(500L);
 
-        assertThrows (ValueNotPresentException.class, () -> orderService.getOrder(500L));
+        assertThrows(ValueNotPresentException.class, () -> orderService.getOrder(500L));
     }
 
-    public Optional<UserEntity> sampleUser (){
-        List<OrderEntity> orderList = new ArrayList<>();
+    public Optional<UserEntity> sampleUser() {
         UserEntity user = new UserEntity();
-        user.setId(500L).setOrderList(orderList);
 
-        return Optional.of (user);
-    }*/
+        return Optional.of(user);
+    }
 
-/*    public OrderEntity getSampleOrder(){
+    public OrderEntity getSampleOrder() {
         OrderTimeEntity orderTimeEntity = new OrderTimeEntity()
                 .setDeliverySlot(ZonedDateTime.ofInstant(
                         Instant.parse("2011-12-03T10:35:30.000Z"),
@@ -127,15 +123,17 @@ class OrderServiceTest {
                         Instant.parse("2011-12-03T10:15:30.000Z"),
                         ZoneOffset.UTC));
 
-        List<MenuItemEntity> orderItemsEntities = new ArrayList<>();
         MenuItemEntity menuItemEntity1 = new MenuItemEntity().setName("Sample Item 1").setId(1L);
         MenuItemEntity menuItemEntity2 = new MenuItemEntity().setName("Sample Item 2").setId(2L);
-        orderItemsEntities.add(menuItemEntity1);
-        orderItemsEntities.add(menuItemEntity2);
 
-        FoodOrderEntity foodOrderEntity = new FoodOrderEntity().setId(1L).setOrderItems(orderItemsEntities).setRestaurantId(1L);
+        RestaurantEntity restaurantEntity1 = new RestaurantEntity().setId(1L);
+        RestaurantEntity restaurantEntity2 = new RestaurantEntity().setId(2L);
+
+        FoodOrderEntity foodOrderEntity1 = new FoodOrderEntity().setId(1L).setMenuItem(menuItemEntity1).setRestaurant(restaurantEntity1);
+        FoodOrderEntity foodOrderEntity2 = new FoodOrderEntity().setId(2L).setMenuItem(menuItemEntity2).setRestaurant(restaurantEntity2);
         List<FoodOrderEntity> foodOrderEntities = new ArrayList<>();
-        foodOrderEntities.add(foodOrderEntity);
+        foodOrderEntities.add(foodOrderEntity1);
+        foodOrderEntities.add(foodOrderEntity2);
 
         PriceEntity priceEntity = new PriceEntity().setFood(23.09f);
 
@@ -143,6 +141,6 @@ class OrderServiceTest {
                 .setDelivery(true).setRefunded(false)
                 .setAddress("123 Street St").setOrderTimeEntity(orderTimeEntity)
                 .setItems(foodOrderEntities).setPriceEntity(priceEntity);
-    }*/
+    }
 
 }
