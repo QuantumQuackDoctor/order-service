@@ -88,6 +88,9 @@ Resources:
                   "email": {
                     "region": "us-east-2",
                     "sender": "scrumptiousdoctor@gmail.com"
+                  },
+                  "stripe": {
+                    "key": "{{resolve:secretsmanager:strip_key}}"
                   }
                 }
           LogConfiguration:
