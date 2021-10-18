@@ -257,6 +257,7 @@ public class OrderService {
                         FoodOrderEntity foodOrderEntity = new FoodOrderEntity();
                         foodOrderEntity.setRestaurant(restaurantRepo.findById(Long.parseLong(orderFood.getRestaurantId())).orElse(null));
                         foodOrderEntity.setMenuItem(menuItemRepo.findById(Long.parseLong(orderItemDTO.getId())).get());
+                        foodOrderEntities.add(foodOrderEntity);
                     }
                 }
             }
