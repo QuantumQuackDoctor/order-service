@@ -46,6 +46,8 @@ public class OrderService {
     private final AmazonSimpleEmailService emailService;
     @Value("${email.sender}")
     private String emailFrom;
+    @Value ("${stripe.key}")
+    private String stripeKey;
 
     private final ModelMapper modelMapper;
 
@@ -272,7 +274,7 @@ public class OrderService {
 
     public ChargeResponse createStripeCharge(ChargeRequest chargeRequest) {
         //TODO store stripe sk somewhere else
-        Stripe.apiKey = "sk_test_51JUCrpATHQZZA29uttyLiHs6lJWkVcybe4Tu3a4sfJTnxYLAMwAr1hdfMvtXSGAFfcXKnaUM6SG2kL42IDXDfz1c00SN07hSbc";
+        Stripe.apiKey = stripeKey;
 
         ChargeCreateParams params = ChargeCreateParams.builder()
                 .setAmount(chargeRequest.getChargePrice())
