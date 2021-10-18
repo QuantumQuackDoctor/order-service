@@ -90,7 +90,7 @@ Resources:
                     "sender": "scrumptiousdoctor@gmail.com"
                   },
                   "stripe": {
-                    "key": "{{resolve:secretsmanager:strip_key}}"
+                    "key": "{{resolve:secretsmanager:strip_key:SecretString:stripe.key}}"
                   }
                 }
           LogConfiguration:
