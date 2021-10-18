@@ -78,7 +78,9 @@ class OrderAPITest {
         orderItemsEntities.add(menuItemEntity1);
         orderItemsEntities.add(menuItemEntity2);
 
-        FoodOrderEntity foodOrderEntity = new FoodOrderEntity().setId(1L).setMenuItem(orderItemsEntities.get(0));
+        RestaurantEntity restaurantEntity = new RestaurantEntity().setId(1L).setName("Test Rest");
+
+        FoodOrderEntity foodOrderEntity = new FoodOrderEntity().setId(1L).setMenuItem(orderItemsEntities.get(0)).setRestaurant(restaurantEntity);
         List<FoodOrderEntity> foodOrderEntities = new ArrayList<>();
         foodOrderEntities.add(foodOrderEntity);
 
