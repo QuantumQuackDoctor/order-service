@@ -108,15 +108,8 @@ class OrderServiceTest {
         assertThrows(ValueNotPresentException.class, () -> orderService.getOrder(500L));
     }
 
-    @Test
-    void getActiveOrdersNormal() {
-
-    }
-
     public Optional<UserEntity> sampleUser() {
-        List<OrderEntity> orderList = new ArrayList<>();
         UserEntity user = new UserEntity();
-        user.setId(500L).setOrderList(orderList);
 
         return Optional.of(user);
     }
@@ -130,15 +123,17 @@ class OrderServiceTest {
                         Instant.parse("2011-12-03T10:15:30.000Z"),
                         ZoneOffset.UTC));
 
-        List<MenuItemEntity> orderItemsEntities = new ArrayList<>();
         MenuItemEntity menuItemEntity1 = new MenuItemEntity().setName("Sample Item 1").setId(1L);
         MenuItemEntity menuItemEntity2 = new MenuItemEntity().setName("Sample Item 2").setId(2L);
-        orderItemsEntities.add(menuItemEntity1);
-        orderItemsEntities.add(menuItemEntity2);
 
-        FoodOrderEntity foodOrderEntity = new FoodOrderEntity().setId(1L).setOrderItems(orderItemsEntities).setRestaurantId(1L);
+        RestaurantEntity restaurantEntity1 = new RestaurantEntity().setId(1L);
+        RestaurantEntity restaurantEntity2 = new RestaurantEntity().setId(2L);
+
+        FoodOrderEntity foodOrderEntity1 = new FoodOrderEntity().setId(1L).setMenuItem(menuItemEntity1).setRestaurant(restaurantEntity1);
+        FoodOrderEntity foodOrderEntity2 = new FoodOrderEntity().setId(2L).setMenuItem(menuItemEntity2).setRestaurant(restaurantEntity2);
         List<FoodOrderEntity> foodOrderEntities = new ArrayList<>();
-        foodOrderEntities.add(foodOrderEntity);
+        foodOrderEntities.add(foodOrderEntity1);
+        foodOrderEntities.add(foodOrderEntity2);
 
         PriceEntity priceEntity = new PriceEntity().setFood(23.09f);
 
