@@ -116,7 +116,7 @@ Resources:
       LoadBalancers:
         - ContainerName: OrderApp
           ContainerPort: 8080
-          TargetGroupArn: !Sub "{{resolve:secretsmanager:UserTGArn-${Environment}}}"
+          TargetGroupArn: !Sub "{{resolve:secretsmanager:OrderTGArn-${Environment}}}"
       TaskDefinition: !Ref OrderTaskDefinition
       NetworkConfiguration:
         AwsvpcConfiguration:
@@ -130,7 +130,7 @@ Resources:
     Properties:
       Actions:
         - Type: forward
-          TargetGroupArn: !Sub "{{resolve:secretsmanager:UserTGArn-${Environment}}}"
+          TargetGroupArn: !Sub "{{resolve:secretsmanager:OrderTGArn-${Environment}}}"
       Conditions:
         - Field: path-pattern
           PathPatternConfig:
