@@ -1,8 +1,9 @@
 package com.smoothstack.order.api;
 
 import com.database.security.AuthDetails;
-import com.database.ormlibrary.order.OrderEntity;
 import com.smoothstack.order.exception.*;
+import com.smoothstack.order.model.ChargeRequest;
+import com.smoothstack.order.model.ChargeResponse;
 import com.smoothstack.order.model.CreateResponse;
 import com.smoothstack.order.model.Order;
 import com.smoothstack.order.service.OrderService;
@@ -80,10 +81,19 @@ public class OrderApiController implements OrderApi {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    /*    @PutMapping(path = "/order/sample")
-    public ResponseEntity<CreateResponse> addSampleOrder (){
-        return ResponseEntity.ok(orderService.createSampleOrder());
-    }*/
+
+    @PreAuthorize("hasAuthority ('user')")
+    @PostMapping ("/order/charge")
+    public ResponseEntity<ChargeResponse> createPaymentIntent (@RequestBody ChargeRequest chargeRequest) {
+        return ResponseEntity.ok().body(orderService.createStripeCharge(chargeRequest));
+    }
+
+    @PreAuthorize("hasAuthority(('user'))")
+    @PostMapping ("/order/email-order")
+    public ResponseEntity<Order> sendOrderConfirmation (@Valid @RequestBody CreateResponse createResponse, Authentication authentication) throws UserNotFoundException {
+        AuthDetails authDetails = (AuthDetails) authentication.getPrincipal();
+        return ResponseEntity.ok().body(this.orderService.sendOrderConfirmation(Long.parseLong(createResponse.getId()), authDetails.getId()));
+    }
 }
 
 

@@ -23,6 +23,19 @@ public class OrderFood   {
   @Valid
   private List<OrderItems> items = null;
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    OrderFood orderFood = (OrderFood) o;
+    return restaurantId.equals(orderFood.restaurantId) && restaurantName.equals(orderFood.restaurantName);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(restaurantId, restaurantName);
+  }
+
   @ApiModelProperty(value = "")
 
   public String getRestaurantName() {
@@ -78,24 +91,6 @@ public class OrderFood   {
     this.items = items;
   }
 
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    OrderFood orderFood = (OrderFood) o;
-    return Objects.equals(this.restaurantId, orderFood.restaurantId) &&
-        Objects.equals(this.items, orderFood.items);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(restaurantId, items);
-  }
 
   @Override
   public String toString() {
