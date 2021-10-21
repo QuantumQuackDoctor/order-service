@@ -18,6 +18,7 @@ import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Charge;
 import com.stripe.param.ChargeCreateParams;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -35,6 +36,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j (topic = "Order Service Logs")
 public class OrderService {
 
     private final OrderRepo orderRepo;
@@ -48,10 +50,14 @@ public class OrderService {
     private String emailFrom;
     @Value ("${stripe.key}")
     private String stripeKey;
+    private final String TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
     private final ModelMapper modelMapper;
 
-    public OrderService(OrderRepo orderRepo, DriverRepo driverRepo, MenuItemRepo menuItemRepo, FoodOrderRepo foodOrderRepo, RestaurantRepo restaurantRepo, UserRepo userRepo, AmazonSimpleEmailService emailService) {
+    public OrderService(OrderRepo orderRepo, DriverRepo driverRepo,
+                        MenuItemRepo menuItemRepo, FoodOrderRepo foodOrderRepo,
+                        RestaurantRepo restaurantRepo, UserRepo userRepo,
+                        AmazonSimpleEmailService emailService) {
         this.orderRepo = orderRepo;
         this.driverRepo = driverRepo;
         this.menuItemRepo = menuItemRepo;
@@ -62,35 +68,50 @@ public class OrderService {
         this.modelMapper = new ModelMapper();
     }
 
-
     public void deleteOrder(Long id) {
         OrderEntity orderEntity = orderRepo.findById(id).isPresent() ? orderRepo.findById(id).get() : null;
         if (orderEntity == null) {
+            log.info ("Delete Order: no order found to delete");
             new ResponseEntity<>(HttpStatus.OK);
             return;
         }
         List<FoodOrderEntity> foodOrderEntityList = orderEntity.getItems();
         foodOrderRepo.deleteAll(foodOrderEntityList);
         orderRepo.deleteById(id);
-
+        log.info ("Delete Order: Order deleted");
         ResponseEntity.ok(null);
     }
 
-    public ResponseEntity<CreateResponse> createOrder(Order orderDTO, Long userId) throws OrderTimeException, UserNotFoundException {
+    /**
+     * Section for updating existing orders
+     */
+    public Void patchOrderStatus (Order orderDTO){
+        OrderEntity orderEntity = orderRepo.findById(Long.parseLong(orderDTO.getId())).orElse(null);
+        if (orderEntity != null){
+            orderEntity.getOrderTimeEntity().setOrderComplete(ZonedDateTime.now());
+            orderRepo.save(orderEntity);
+            log.info ("Order status patched");
+        }
+        return null;
+    }
+
+    public ResponseEntity<CreateResponse> createOrder(Order orderDTO, Long userId)
+            throws OrderTimeException, UserNotFoundException {
         OrderEntity orderEntity = convertToEntity(orderDTO);
         orderEntity.setActive(true);
         if (userRepo.findById(userId).isPresent())
             orderEntity.setUser(userRepo.findById(userId).get());
-        else
+        else{
             throw new UserNotFoundException("User not found");
-
+        }
         if (orderEntity.getDelivery()) {
             ZonedDateTime deliverySlot = orderEntity.getOrderTimeEntity().getDeliverySlot();
             ZonedDateTime restaurantAccept = orderEntity.getOrderTimeEntity().getRestaurantAccept();
             long diff = ChronoUnit.MINUTES.between(restaurantAccept, deliverySlot);
             if (diff < 15) throw new OrderTimeException("Time slot too early");
         }
-        orderRepo.save(orderEntity);
+        orderEntity = orderRepo.save(orderEntity);
+        log.info ("Order created, id: " + orderEntity.getId());
         return ResponseEntity.ok(new CreateResponse().type(CreateResponse.TypeEnum.STRIPE)
                 .id(String.valueOf(orderEntity.getId())).setAddress(orderEntity.getAddress()));
     }
@@ -101,6 +122,7 @@ public class OrderService {
             List<Order> orderList = new ArrayList<>();
             orderRepo.getOrderByUser(userId).forEach(orderEntity ->
                     orderList.add(convertToDTO(orderEntity)));
+            log.info ("User order list retrieved");
             return orderList;
         }
         throw new UserNotFoundException("User not found!");
@@ -108,8 +130,10 @@ public class OrderService {
 
     public ResponseEntity<Order> getOrder(Long id) throws ValueNotPresentException {
         Order orderDTO = orderRepo.findById(id).isPresent() ? convertToDTO(orderRepo.findById(id).get()) : null;
-        if (orderDTO == null)
+        if (orderDTO == null){
             throw new ValueNotPresentException("No item of that id in the database");
+        }
+        log.info ("getOrder: order found and returned");
         return ResponseEntity.ok(orderDTO);
     }
 
@@ -123,7 +147,7 @@ public class OrderService {
 
         orderDTOs = sortList(orderDTOs, sortType);
         orderDTOs = pageList(orderDTOs, page, size);
-
+        log.info ("getActiveOrders: active orders retrieved");
         return ResponseEntity.ok(orderDTOs);
     }
 
@@ -173,6 +197,7 @@ public class OrderService {
     public ResponseEntity<Void> patchOrders(Order order) {
         OrderEntity orderEntity = convertToEntity(order);
         orderRepo.save(orderEntity);
+        log.info ("patchOrders: order updated");
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -185,7 +210,6 @@ public class OrderService {
         if (orderEntity.getDriver() != null) orderDTO.setDriverId(String.valueOf(orderEntity.getDriver().getId()));
         List<FoodOrderEntity> foodOrderEntities = orderEntity.getItems();
         List<OrderFood> orderFoodList = new ArrayList<>();
-        List<OrderItems> orderItemsList = new ArrayList<>();
 
         for (FoodOrderEntity foodOrderEntity : foodOrderEntities) {
 
@@ -201,7 +225,6 @@ public class OrderService {
             } else {
                 orderFoodList.get(orderFoodList.indexOf(orderFood)).getItems().add(convertItemToDTO(foodOrderEntity.getMenuItem()));
             }
-            orderFood.setItems(orderItemsList);
         }
 
         OrderPrice orderPrice = modelMapper.map(orderEntity.getPriceEntity(), OrderPrice.class);
@@ -221,7 +244,6 @@ public class OrderService {
 
     public OrderOrderTime convertTimeToDTO(OrderTimeEntity orderTimeEntity) {
         OrderOrderTime orderTimeDTO = new OrderOrderTime();
-        String TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
         if (orderTimeEntity.getOrderComplete() != null) {
             String orderComplete = DateTimeFormatter.ofPattern(TIME_FORMAT).format(
                     orderTimeEntity.getOrderComplete());
@@ -290,9 +312,11 @@ public class OrderService {
             charge = Charge.create(params);
             chargeResponse = new ChargeResponse(charge.toJson(), "");
         } catch (StripeException e) {
+            log.error ("Stripe Error:" + e.getMessage());
             chargeResponse = new ChargeResponse(null, e.getMessage().split(";")[0]);
         }
 
+        log.info ("createStripeCharge: Stripe charge successfully created.");
         return chargeResponse;
     }
 
@@ -301,7 +325,8 @@ public class OrderService {
         Optional <UserEntity> userEntityOptional = userRepo.findById(userId);
         if (userEntityOptional.isPresent()){
             UserEntity entity = userEntityOptional.get();
-            if (entity.getSettings().getNotifications().getEmail()) {
+            if (entity.getSettings().getNotifications().getEmailOrder()) {
+                log.info ("senOrderConfirmation: user email order details option active");
                 String emailTo = entity.getEmail();
                 Order order = convertToDTO(orderRepo.findById(orderId).orElse(null));
                 builder.append("<h1>Scrumptious Order Confirmation: <h1> \n <strong>Order Items: </strong>");
@@ -327,6 +352,7 @@ public class OrderService {
                                         .withHtml(new Content().withCharset("UTF-8").withData(htmlBody))).withSubject(new Content()
                                         .withCharset("UTF-8").withData("Scrumptious Order Confirmation"))).withSource(emailFrom);
                 emailService.sendEmail(request);
+                log.info ("sendOrderConfirmation: Order confirmation email sent!");
                 return order;
             }
             return null;
