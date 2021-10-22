@@ -118,7 +118,9 @@ public class OrderService {
         List<Order> orderDTOs = new ArrayList<>();
         for (OrderEntity orderEntity : orderEntities) {
             if (orderEntity.getRefunded() == null || !orderEntity.getRefunded())
-                orderDTOs.add(convertToDTO(orderEntity));
+                if (orderEntity.getDriver() != null) {
+                    orderDTOs.add(convertToDTO(orderEntity));
+                }
         }
 
         orderDTOs = sortList(orderDTOs, sortType);
@@ -172,6 +174,14 @@ public class OrderService {
 
     public ResponseEntity<Void> patchOrders(Order order) {
         OrderEntity orderEntity = convertToEntity(order);
+        orderRepo.save(orderEntity);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    public ResponseEntity<Void> patchDriverOrders(Long order, Long driver, Boolean assign) {
+        OrderEntity orderEntity = orderRepo.findById(order).get();
+        DriverEntity driverEntity = driverRepo.findById(driver).get();
+        orderEntity.setDriver(driverEntity);
         orderRepo.save(orderEntity);
         return new ResponseEntity<>(HttpStatus.OK);
     }

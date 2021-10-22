@@ -51,7 +51,12 @@ public class OrderApiController implements OrderApi {
     }
 
     @Override
-    @PreAuthorize("hasAuthority ('user')")
+    public ResponseEntity<Void> patchDriverOrders(Long order, Long driver, Boolean assign) {
+        return orderService.patchDriverOrders(order, driver, assign);
+    }
+
+    @Override
+    @PreAuthorize("hasAuthority('driver')")
     public ResponseEntity<List<Order>> getActiveOrders(String sortType, Integer page, Integer size) {
         return orderService.getActiveOrders(sortType, page, size);
     }

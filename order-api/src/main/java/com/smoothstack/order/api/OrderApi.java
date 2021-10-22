@@ -365,4 +365,33 @@ public interface OrderApi {
 
     }
 
+    /**
+     * PATCH /orders : Driver pick Order
+     * Update order, use this to connect orders with drivers (set driverId)
+     *
+     * @param Driver id and order id
+     * @return Update successful (status code 200)
+     *         or Access token is missing or invalid (status code 401)
+     *         or Forbidden (status code 403)
+     *         or Not Found (status code 404)
+     */
+    @ApiOperation(value = "Driver pick Order", nickname = "patchOrders", notes = "Update order, assign driver to order", authorizations = {
+
+            @Authorization(value = "JWT")
+    }, tags={ "order", })
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Update successful"),
+            @ApiResponse(code = 401, message = "Access token is missing or invalid", response = String.class),
+            @ApiResponse(code = 403, message = "Forbidden"),
+            @ApiResponse(code = 404, message = "Not Found") })
+    @PatchMapping(
+            value = "/orders/drivers",
+            produces = { "application/json" },
+            consumes = { "application/json" }
+    )
+    default ResponseEntity<Void> patchDriverOrders(@ApiParam(value = "Update order, assign driver to order"  )  @Valid @RequestParam(required = true) Long order, @Valid @RequestParam(required = true) Long driver, @Valid @RequestParam(required = true) Boolean assign) {
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+
+    }
+
 }
