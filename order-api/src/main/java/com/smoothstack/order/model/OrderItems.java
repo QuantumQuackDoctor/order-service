@@ -19,9 +19,21 @@ public class OrderItems   {
   @JsonProperty("name")
   private String name;
 
+  @JsonProperty ("quantity")
+  private Integer quantity;
+
   @JsonProperty("configurations")
   @Valid
   private List<String> configurations = null;
+
+  public Integer getQuantity() {
+    return quantity;
+  }
+
+  public OrderItems setQuantity(Integer quantity) {
+    this.quantity = quantity;
+    return this;
+  }
 
   public OrderItems name(String name) {
     this.name = name;

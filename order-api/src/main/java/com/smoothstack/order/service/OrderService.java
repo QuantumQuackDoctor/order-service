@@ -4,10 +4,7 @@ import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
 import com.amazonaws.services.simpleemail.model.*;
 import com.database.ormlibrary.driver.DriverEntity;
 import com.database.ormlibrary.food.MenuItemEntity;
-import com.database.ormlibrary.order.FoodOrderEntity;
-import com.database.ormlibrary.order.OrderEntity;
-import com.database.ormlibrary.order.OrderTimeEntity;
-import com.database.ormlibrary.order.PriceEntity;
+import com.database.ormlibrary.order.*;
 import com.database.ormlibrary.user.UserEntity;
 import com.smoothstack.order.exception.OrderTimeException;
 import com.smoothstack.order.exception.UserNotFoundException;
@@ -30,9 +27,7 @@ import java.math.RoundingMode;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -214,16 +209,16 @@ public class OrderService {
         for (FoodOrderEntity foodOrderEntity : foodOrderEntities) {
 
             OrderFood orderFood = new OrderFood();
-            orderFood.setRestaurantId(String.valueOf(foodOrderEntity.getRestaurant()));
+            orderFood.setRestaurantId(String.valueOf(foodOrderEntity.getRestaurant().getId()));
             orderFood.setRestaurantName(foodOrderEntity.getRestaurant().getName());
 
             if (!orderFoodList.contains(orderFood)) {
                 List<OrderItems> newOrderItems = new ArrayList<>();
-                newOrderItems.add(convertItemToDTO(foodOrderEntity.getMenuItem()));
+                newOrderItems.add(convertItemToDTO(foodOrderEntity));
                 orderFood.setItems(newOrderItems);
                 orderFoodList.add(orderFood);
             } else {
-                orderFoodList.get(orderFoodList.indexOf(orderFood)).getItems().add(convertItemToDTO(foodOrderEntity.getMenuItem()));
+                orderFoodList.get(orderFoodList.indexOf(orderFood)).getItems().add(convertItemToDTO(foodOrderEntity));
             }
         }
 
@@ -236,9 +231,17 @@ public class OrderService {
 
     }
 
-    public OrderItems convertItemToDTO(MenuItemEntity entity) {
-        OrderItems orderItems = modelMapper.map(entity, OrderItems.class);
-        orderItems.setId(String.valueOf(entity.getId()));
+    public OrderItems convertItemToDTO(FoodOrderEntity foodOrderEntity) {
+        MenuItemEntity menuItemEntity = foodOrderEntity.getMenuItem();
+        String[] configurations = foodOrderEntity.getConfigurations().get(0).getConfigurationName().split(" ");
+        /*String itemId = configurations[0];*/
+        String quantity = configurations[configurations.length - 1];
+
+
+        OrderItems orderItems = modelMapper.map(menuItemEntity, OrderItems.class);
+        orderItems.setId(String.valueOf(menuItemEntity.getId()));
+        orderItems.setQuantity(Integer.parseInt(quantity));
+        orderItems.setConfigurations(Collections.singletonList(quantity));
         return orderItems;
     }
 
@@ -271,14 +274,17 @@ public class OrderService {
         List<FoodOrderEntity> foodOrderEntities = new ArrayList<>();
 
         if (orderFoodList != null && !orderFoodList.isEmpty()) {
-            //finds order lists from all restaurants
             for (OrderFood orderFood : orderFoodList) {
-                //populates a specific order list with items
                 for (OrderItems orderItemDTO : orderFood.getItems()) {
                     if (menuItemRepo.findById(Long.parseLong(orderItemDTO.getId())).isPresent()) {
+                        List<OrderConfigurationEntity> configurationEntities = new ArrayList<>();
                         FoodOrderEntity foodOrderEntity = new FoodOrderEntity();
                         foodOrderEntity.setRestaurant(restaurantRepo.findById(Long.parseLong(orderFood.getRestaurantId())).orElse(null));
                         foodOrderEntity.setMenuItem(menuItemRepo.findById(Long.parseLong(orderItemDTO.getId())).get());
+                        OrderConfigurationEntity configurationEntity = new OrderConfigurationEntity()
+                                .setConfigurationName(orderItemDTO.getId() + " Quantity: " + orderItemDTO.getConfigurations().get(0));
+                        configurationEntities.add(configurationEntity)
+;                        foodOrderEntity.setConfigurations(configurationEntities);
                         foodOrderEntities.add(foodOrderEntity);
                     }
                 }

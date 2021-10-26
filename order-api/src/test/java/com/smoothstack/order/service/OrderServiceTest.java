@@ -2,10 +2,7 @@ package com.smoothstack.order.service;
 
 import com.database.ormlibrary.food.MenuItemEntity;
 import com.database.ormlibrary.food.RestaurantEntity;
-import com.database.ormlibrary.order.FoodOrderEntity;
-import com.database.ormlibrary.order.OrderEntity;
-import com.database.ormlibrary.order.OrderTimeEntity;
-import com.database.ormlibrary.order.PriceEntity;
+import com.database.ormlibrary.order.*;
 import com.database.ormlibrary.user.UserEntity;
 import com.smoothstack.order.exception.OrderTimeException;
 import com.smoothstack.order.exception.UserNotFoundException;
@@ -25,12 +22,11 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 
 @SpringBootTest
@@ -55,7 +51,7 @@ class OrderServiceTest {
 
         Mockito.when(userRepo.findById(anyLong())).thenReturn(sampleUser());
         Mockito.when(orderRepo.save(Mockito.any())).thenReturn(getSampleOrder());
-        Mockito.when(restaurantRepo.findById(Mockito.any())).thenReturn(Optional.of(new RestaurantEntity().setName("Sample Restaurant")));
+        Mockito.when(restaurantRepo.findById(Mockito.any())).thenReturn(Optional.of(new RestaurantEntity().setName("Sample Restaurant").setId(1L)));
         //inserts sample items in empty db
 
         Order orderDTO = orderService.convertToDTO(orderEntity);
@@ -102,10 +98,30 @@ class OrderServiceTest {
         assert insertedResponse != null;
         assertEquals(orderDTO.getAddress(), insertedResponse.getAddress());
 
-
         orderService.deleteOrder(500L);
 
         assertThrows(ValueNotPresentException.class, () -> orderService.getOrder(500L));
+    }
+
+    @Test
+    void getOrderNormal() throws ValueNotPresentException {
+        OrderEntity orderEntity = getSampleOrder();
+        Order orderDTO = orderService.convertToDTO(orderEntity);
+
+        Mockito.when(userRepo.findById(anyLong())).thenReturn(sampleUser());
+        Mockito.when(orderRepo.findById(any())).thenReturn(Optional.of(getSampleOrder()));
+
+        assertEquals(orderDTO.getId(), Objects.requireNonNull(orderService.getOrder(500L).getBody()).getId());
+    }
+
+    @Test
+    void getActiveOrdersNormal () {
+        Iterable<OrderEntity> orderEntityIterable = Collections.singletonList(getSampleOrder());
+
+        Mockito.when (orderRepo.findAll()).thenReturn(orderEntityIterable);
+
+        assertEquals(Objects.requireNonNull(orderService.getActiveOrders("time", 0, 1).getBody()).size(), 1);
+        assertEquals(Objects.requireNonNull(orderService.getActiveOrders("price", 0, 1).getBody()).size(), 1);
     }
 
     public Optional<UserEntity> sampleUser() {
@@ -129,8 +145,13 @@ class OrderServiceTest {
         RestaurantEntity restaurantEntity1 = new RestaurantEntity().setId(1L);
         RestaurantEntity restaurantEntity2 = new RestaurantEntity().setId(2L);
 
-        FoodOrderEntity foodOrderEntity1 = new FoodOrderEntity().setId(1L).setMenuItem(menuItemEntity1).setRestaurant(restaurantEntity1);
-        FoodOrderEntity foodOrderEntity2 = new FoodOrderEntity().setId(2L).setMenuItem(menuItemEntity2).setRestaurant(restaurantEntity2);
+        OrderConfigurationEntity orderConfigurationEntity1 = new OrderConfigurationEntity().setConfigurationName("1 quantity: 1");
+        OrderConfigurationEntity orderConfigurationEntity2 = new OrderConfigurationEntity().setConfigurationName("2 quantity: 1");
+
+        FoodOrderEntity foodOrderEntity1 = new FoodOrderEntity().setId(1L).setMenuItem(menuItemEntity1)
+                .setRestaurant(restaurantEntity1).setConfigurations(Collections.singletonList(orderConfigurationEntity1));
+        FoodOrderEntity foodOrderEntity2 = new FoodOrderEntity().setId(2L).setMenuItem(menuItemEntity2)
+                .setRestaurant(restaurantEntity2).setConfigurations(Collections.singletonList(orderConfigurationEntity2));
         List<FoodOrderEntity> foodOrderEntities = new ArrayList<>();
         foodOrderEntities.add(foodOrderEntity1);
         foodOrderEntities.add(foodOrderEntity2);
