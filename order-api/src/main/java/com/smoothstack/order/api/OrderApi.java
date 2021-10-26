@@ -285,8 +285,7 @@ public interface OrderApi {
             @ApiResponse(code = 404, message = "restaurant/item not found") })
     @GetMapping(
             path = "/orders/driver",
-            produces = { "application/json" },
-            consumes = { "application/json" }
+            produces = { "application/json" }
     )
     default ResponseEntity<List<Order>> getActiveOrders(
             @RequestParam(value = "sort_type", required = false) @Valid @ApiParam("type of sort") String sortType,
