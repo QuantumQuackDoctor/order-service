@@ -15,7 +15,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 3
-      LogGroupName: OrderServiceGroup
+      LogGroupName: !Sub "OrderServiceGroup-${Environment}"
   TaskRole:
     Type: AWS::IAM::Role
     Properties:

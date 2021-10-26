@@ -118,7 +118,7 @@ public class OrderService {
         List<Order> orderDTOs = new ArrayList<>();
         for (OrderEntity orderEntity : orderEntities) {
             if (orderEntity.getRefunded() == null || !orderEntity.getRefunded())
-                if (orderEntity.getDriver() != null) {
+                if (orderEntity.getDriver() == null) {
                     orderDTOs.add(convertToDTO(orderEntity));
                 }
         }
