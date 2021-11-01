@@ -75,4 +75,9 @@ public class OrderExceptionHandler {
                 )
         );
     }
+
+    @ExceptionHandler(CustomHttpException.class)
+    public ResponseEntity<String> handleHttpException(CustomHttpException e){
+        return new ResponseEntity<>(e.getMessage(), e.getStatus());
+    }
 }

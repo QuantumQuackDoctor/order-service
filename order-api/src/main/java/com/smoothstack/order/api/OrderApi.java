@@ -3,7 +3,7 @@ package com.smoothstack.order.api;
 import com.smoothstack.order.exception.*;
 import com.smoothstack.order.model.CreateResponse;
 import com.smoothstack.order.model.InlineObject;
-import com.smoothstack.order.model.InlineObject2;
+import com.smoothstack.order.model.OrderAction;
 import com.smoothstack.order.model.Order;
 import io.swagger.annotations.*;
 import org.springframework.http.HttpStatus;
@@ -125,33 +125,6 @@ public interface OrderApi {
     }
 
 
-    /**
-     * PATCH /order/driver : Driver Update Order
-     * Mark order delivered/picked up
-     *
-     * @param inlineObject2  (optional)
-     * @return Order Delivered (status code 200)
-     *         or Unauthorized (status code 401)
-     *         or Forbidden (status code 403)
-     *         or Order Not Found (status code 404)
-     */
-    @ApiOperation(value = "Driver Update Order", nickname = "driverDeliverOrder", notes = "Mark order delivered/picked up", authorizations = {
-        
-        @Authorization(value = "JWT")
-         }, tags={ "order", })
-    @ApiResponses(value = { 
-        @ApiResponse(code = 200, message = "Order Delivered"),
-        @ApiResponse(code = 401, message = "Unauthorized"),
-        @ApiResponse(code = 403, message = "Forbidden"),
-        @ApiResponse(code = 404, message = "Order Not Found") })
-    @PatchMapping(
-        value = "/order/driver",
-        consumes = { "application/json" }
-    )
-    default ResponseEntity<Void> driverDeliverOrder(@ApiParam(value = ""  )  @Valid @RequestBody(required = false) InlineObject2 inlineObject2) {
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
-
-    }
 
 
     /**
