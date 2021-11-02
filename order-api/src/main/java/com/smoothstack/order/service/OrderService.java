@@ -196,6 +196,17 @@ public class OrderService {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    public ResponseEntity<String> patchOrder(Order order, Long userId) throws ValueNotPresentException {
+        OrderEntity orderEntity = orderRepo.findById(Long.parseLong(order.getId())).orElseThrow(() ->
+                new ValueNotPresentException("Order not found"));
+        if (!Objects.equals(orderEntity.getUser().getId(), userId))
+            return ResponseEntity.status(401).body("Order does not belong to this user");
+
+        orderRepo.save(orderEntity);
+        log.info ("patchOrders: order updated");
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     public Order convertToDTO(OrderEntity orderEntity) {
         Order orderDTO = modelMapper.map(orderEntity, Order.class);
 

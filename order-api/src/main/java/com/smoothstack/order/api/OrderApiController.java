@@ -1,6 +1,5 @@
 package com.smoothstack.order.api;
 
-import com.database.ormlibrary.order.OrderEntity;
 import com.database.security.AuthDetails;
 import com.smoothstack.order.exception.*;
 import com.smoothstack.order.model.ChargeRequest;
@@ -44,7 +43,7 @@ public class OrderApiController implements OrderApi {
 
     @Override
     @PreAuthorize("hasAuthority('user')")
-    public ResponseEntity<Void> patchOrderStatus (Order orderDTO){
+    public ResponseEntity<Void> patchOrderStatus (@Valid Order orderDTO){
         log.info ("patchOrderStatus called.");
         return ResponseEntity.ok (orderService.patchOrderStatus (orderDTO));
     }
@@ -63,6 +62,13 @@ public class OrderApiController implements OrderApi {
     }
 
     @Override
+    public ResponseEntity<String> patchOrder(Order order, Authentication authentication) throws ValueNotPresentException {
+        log.info ("patchOrders called");
+        AuthDetails autheDetails = (AuthDetails) authentication.getPrincipal();
+        return orderService.patchOrder(order, autheDetails.getId());
+    }
+
+    @Override
     @PreAuthorize("hasAuthority ('user')")
     public ResponseEntity<List<Order>> getActiveOrders(String sortType, Integer page, Integer size) {
         log.info ("getActiveOrders called");
@@ -71,7 +77,7 @@ public class OrderApiController implements OrderApi {
 
     @Override
     @PreAuthorize("hasAuthority('user')")
-    public ResponseEntity<CreateResponse> createOrder(Order order, Authentication authentication) throws MissingFieldsException, EmptyCartException, OrderTimeException, UserNotFoundException {
+    public ResponseEntity<CreateResponse> createOrder(@Valid Order order, Authentication authentication) throws MissingFieldsException, EmptyCartException, OrderTimeException, UserNotFoundException {
         log.info ("createOrder called");
         if (!order.checkRequiredFields())
             throw new MissingFieldsException("Missing require fields");
