@@ -17,14 +17,14 @@ public class OrderOrderTime   {
   @JsonProperty("restaurantAccept")
   private String restaurantAccept;
 
-  @JsonProperty("restaurantStart")
-  private String restaurantStart;
-
   @JsonProperty("restaurantComplete")
   private String restaurantComplete;
 
   @JsonProperty("driverAccept")
   private String driverAccept;
+
+  @JsonProperty("driverPickUp")
+  private String driverPickUp;
 
   @JsonProperty("delivered")
   private String delivered;
@@ -72,25 +72,6 @@ public class OrderOrderTime   {
     this.restaurantAccept = restaurantAccept;
   }
 
-  public OrderOrderTime restaurantStart(String restaurantStart) {
-    this.restaurantStart = restaurantStart;
-    return this;
-  }
-
-  /**
-   * Get restaurantStart
-   * @return restaurantStart
-  */
-  @ApiModelProperty(example = "2021-02-10T00:00:00.000Z", value = "")
-
-@Pattern(regexp="\\b\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}Z\\b") 
-  public String getRestaurantStart() {
-    return restaurantStart;
-  }
-
-  public void setRestaurantStart(String restaurantStart) {
-    this.restaurantStart = restaurantStart;
-  }
 
   public OrderOrderTime restaurantComplete(String restaurantComplete) {
     this.restaurantComplete = restaurantComplete;
@@ -172,55 +153,13 @@ public class OrderOrderTime   {
     this.deliverySlot = deliverySlot;
   }
 
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    OrderOrderTime orderOrderTime = (OrderOrderTime) o;
-    return Objects.equals(this.orderPlaced, orderOrderTime.orderPlaced) &&
-        Objects.equals(this.restaurantAccept, orderOrderTime.restaurantAccept) &&
-        Objects.equals(this.restaurantStart, orderOrderTime.restaurantStart) &&
-        Objects.equals(this.restaurantComplete, orderOrderTime.restaurantComplete) &&
-        Objects.equals(this.driverAccept, orderOrderTime.driverAccept) &&
-        Objects.equals(this.delivered, orderOrderTime.delivered) &&
-        Objects.equals(this.deliverySlot, orderOrderTime.deliverySlot);
+  public String getDriverPickUp() {
+    return driverPickUp;
   }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(orderPlaced, restaurantAccept, restaurantStart, restaurantComplete, driverAccept, delivered, deliverySlot);
-  }
-
-  @Override
-  public String toString() {
-    StringBuilder sb = new StringBuilder();
-    sb.append("class OrderOrderTime {\n");
-    
-    sb.append("    orderPlaced: ").append(toIndentedString(orderPlaced)).append("\n");
-    sb.append("    restaurantAccept: ").append(toIndentedString(restaurantAccept)).append("\n");
-    sb.append("    restaurantStart: ").append(toIndentedString(restaurantStart)).append("\n");
-    sb.append("    restaurantComplete: ").append(toIndentedString(restaurantComplete)).append("\n");
-    sb.append("    driverAccept: ").append(toIndentedString(driverAccept)).append("\n");
-    sb.append("    delivered: ").append(toIndentedString(delivered)).append("\n");
-    sb.append("    deliverySlot: ").append(toIndentedString(deliverySlot)).append("\n");
-    sb.append("}");
-    return sb.toString();
-  }
-
-  /**
-   * Convert the given object to string with each line indented by 4 spaces
-   * (except the first line).
-   */
-  private String toIndentedString(Object o) {
-    if (o == null) {
-      return "null";
-    }
-    return o.toString().replace("\n", "\n    ");
+  public OrderOrderTime setDriverPickUp(String driverPickUp) {
+    this.driverPickUp = driverPickUp;
+    return this;
   }
 }
 
