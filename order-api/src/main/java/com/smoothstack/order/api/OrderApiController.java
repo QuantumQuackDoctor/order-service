@@ -42,6 +42,14 @@ public class OrderApiController implements OrderApi {
     }
 
     @Override
+    @PreAuthorize("hasAuthority ('user')")
+    public ResponseEntity<String> cancelOrder (Long orderId, Authentication authentication) throws ValueNotPresentException {
+        log.info ("cancelOrder called");
+        AuthDetails authDetails = (AuthDetails) authentication.getPrincipal();
+        return orderService.cancelOrder (orderId, authDetails.getId());
+    }
+
+    @Override
     @PreAuthorize("hasAuthority('user')")
     public ResponseEntity<Void> patchOrderStatus (@Valid Order orderDTO){
         log.info ("patchOrderStatus called.");
@@ -64,8 +72,8 @@ public class OrderApiController implements OrderApi {
     @Override
     public ResponseEntity<String> patchOrder(Order order, Authentication authentication) throws ValueNotPresentException {
         log.info ("patchOrders called");
-        AuthDetails autheDetails = (AuthDetails) authentication.getPrincipal();
-        return orderService.patchOrder(order, autheDetails.getId());
+        AuthDetails authDetails = (AuthDetails) authentication.getPrincipal();
+        return orderService.patchOrder(order, authDetails.getId());
     }
 
     @Override
