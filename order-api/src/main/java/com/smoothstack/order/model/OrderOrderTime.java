@@ -21,10 +21,6 @@ public class OrderOrderTime   {
   @Pattern(regexp="\\b\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}Z\\b")
   private String restaurantAccept;
 
-  @JsonProperty("restaurantStart")
-  @Pattern(regexp="\\b\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}Z\\b")
-  private String restaurantStart;
-
   @JsonProperty("restaurantComplete")
   @Pattern(regexp="\\b\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}Z\\b")
   private String restaurantComplete;
@@ -32,6 +28,9 @@ public class OrderOrderTime   {
   @JsonProperty("driverAccept")
   @Pattern(regexp="\\b\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}Z\\b")
   private String driverAccept;
+
+  @JsonProperty("driverPickUp")
+  private String driverPickUp;
 
   @JsonProperty("delivered")
   @Pattern(regexp="\\b\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}Z\\b")
