@@ -31,7 +31,7 @@ public class DriverService {
     }
 
     public List<Order> getAcceptedOrders(Long driverId) {
-        List<OrderEntity> driverOrders = orderRepo.getOrderEntitiesByDriverId(driverId);
+        List<OrderEntity> driverOrders = orderRepo.getByDriverIdAndActiveTrue(driverId);
         return driverOrders.stream().map((orderService::convertToDTO)).collect(Collectors.toList());
     }
 

@@ -13,5 +13,5 @@ public interface OrderRepo extends CrudRepository<OrderEntity, Long> {
     @Query (value = "select * from order_entity where order_entity.user_id = :userId", nativeQuery = true)
     List<OrderEntity> getOrderByUser (@Param("userId") Long userId);
 
-    List<OrderEntity> getOrderEntitiesByDriverId(Long driverId);
+    List<OrderEntity> getByDriverIdAndActiveTrue(Long driverId);
 }
