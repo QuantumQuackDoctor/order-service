@@ -31,8 +31,23 @@ public class DriverService {
         }
     }
 
-    public List<Order> getAcceptedOrders(Long driverId){
+    public List<Order> getAcceptedOrders(Long driverId) {
         List<OrderEntity> driverOrders = orderRepo.getOrderEntitiesByDriverId(driverId);
         return driverOrders.stream().map((orderService::convertToDTO)).collect(Collectors.toList());
+    }
+
+    public void deliverOrder(Long orderId, Long driverId) throws OrderNotFoundException, OrderNotAcceptedException {
+        System.out.println("OrderId: " + orderId);
+        OrderEntity order = orderRepo.findById(orderId).orElseThrow(
+                () -> new OrderNotFoundException("order does not exist"));
+
+        if (order.getDriver() != null && order.getDriver().getId().equals(driverId)) {
+            if (order.getOrderTimeEntity().getDriverPickUp() == null)
+                order.getOrderTimeEntity().setDriverPickUp(ZonedDateTime.now());
+            order.getOrderTimeEntity().setDriverComplete(ZonedDateTime.now());
+            orderRepo.save(order);
+        } else {
+            throw new OrderNotAcceptedException();
+        }
     }
 }

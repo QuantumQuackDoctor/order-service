@@ -54,7 +54,10 @@ public class DriverApiController {
         switch (orderAction.getAction()) {
             case RETRIEVED:
                 driverService.pickUpOrder(orderAction.getOrderId(), authDetails.getId());
+                break;
             case DELIVERED:
+                driverService.deliverOrder(orderAction.getOrderId(), authDetails.getId());
+                break;
             default:
                 //these will do something later
         }
