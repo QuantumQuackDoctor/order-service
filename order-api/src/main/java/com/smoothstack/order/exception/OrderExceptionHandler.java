@@ -1,5 +1,6 @@
 package com.smoothstack.order.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -9,11 +10,13 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import java.time.ZonedDateTime;
 
 @ControllerAdvice
+@Slf4j(topic = "Order Exception Handler")
 public class OrderExceptionHandler {
 
     @ExceptionHandler(EmptyCartException.class)
     @ResponseBody
-    public ResponseEntity<Object> handleEmptyCart (EmptyCartException e){
+    public ResponseEntity<Object> handleEmptyCart(EmptyCartException e) {
+        log.error(e.getMessage());
         return ResponseEntity.badRequest().body(
                 new OrderExceptionResponse(
                         e.getMessage(),
@@ -27,6 +30,7 @@ public class OrderExceptionHandler {
     @ExceptionHandler(ValueNotPresentException.class)
     @ResponseBody
     public ResponseEntity<Object> handleNotFound(ValueNotPresentException e) {
+        log.error(e.getMessage());
         return ResponseEntity.badRequest().body(
                 new OrderExceptionResponse(
                         e.getMessage(),
@@ -39,7 +43,8 @@ public class OrderExceptionHandler {
 
     @ExceptionHandler(MissingFieldsException.class)
     @ResponseBody
-    public ResponseEntity<Object> handleMissingFields (MissingFieldsException e){
+    public ResponseEntity<Object> handleMissingFields(MissingFieldsException e) {
+        log.error(e.getMessage());
         return ResponseEntity.badRequest().body(
                 new OrderExceptionResponse(
                         e.getMessage(),
@@ -52,7 +57,8 @@ public class OrderExceptionHandler {
 
     @ExceptionHandler(OrderTimeException.class)
     @ResponseBody
-    public ResponseEntity<Object> handleTimeException (OrderTimeException e){
+    public ResponseEntity<Object> handleTimeException(OrderTimeException e) {
+        log.error(e.getMessage());
         return ResponseEntity.badRequest().body(
                 new OrderExceptionResponse(
                         e.getMessage(),
@@ -63,9 +69,10 @@ public class OrderExceptionHandler {
         );
     }
 
-    @ExceptionHandler (UserNotFoundException.class)
+    @ExceptionHandler(UserNotFoundException.class)
     @ResponseBody
-    public ResponseEntity<Object> handleUserNotFoundException (UserNotFoundException e){
+    public ResponseEntity<Object> handleUserNotFoundException(UserNotFoundException e) {
+        log.error(e.getMessage());
         return ResponseEntity.badRequest().body(
                 new OrderExceptionResponse(
                         e.getMessage(),

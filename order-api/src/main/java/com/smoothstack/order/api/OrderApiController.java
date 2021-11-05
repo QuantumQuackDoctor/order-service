@@ -1,5 +1,6 @@
 package com.smoothstack.order.api;
 
+import com.database.ormlibrary.order.OrderEntity;
 import com.database.security.AuthDetails;
 import com.smoothstack.order.exception.*;
 import com.smoothstack.order.model.ChargeRequest;
@@ -8,6 +9,7 @@ import com.smoothstack.order.model.CreateResponse;
 import com.smoothstack.order.model.Order;
 import com.smoothstack.order.service.OrderService;
 import io.swagger.annotations.ApiParam;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,6 +25,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping(path = "${openapi.orchestrator.base-path:}")
 @CrossOrigin
+@Slf4j (topic = "OrderAPI Controller: ")
 public class OrderApiController implements OrderApi {
 
     private final NativeWebRequest request;
@@ -40,13 +43,22 @@ public class OrderApiController implements OrderApi {
     }
 
     @Override
+    @PreAuthorize("hasAuthority('user')")
+    public ResponseEntity<Void> patchOrderStatus (Order orderDTO){
+        log.info ("patchOrderStatus called.");
+        return ResponseEntity.ok (orderService.patchOrderStatus (orderDTO));
+    }
+
+    @Override
     @PreAuthorize("hasAuthority('admin')")
     public ResponseEntity<Order> getOrder(@ApiParam(value = "") @Valid @RequestParam(value = "id", required = false) Long id) throws ValueNotPresentException {
+        log.info ("getOrder called.");
         return orderService.getOrder(id);
     }
 
     @Override
     public ResponseEntity<Void> patchOrders(Order order) {
+        log.info ("patchOrders called");
         return orderService.patchOrders(order);
     }
 
@@ -58,12 +70,14 @@ public class OrderApiController implements OrderApi {
     @Override
     @PreAuthorize("hasAuthority('driver')")
     public ResponseEntity<List<Order>> getActiveOrders(String sortType, Integer page, Integer size) {
+        log.info ("getActiveOrders called");
         return orderService.getActiveOrders(sortType, page, size);
     }
 
     @Override
     @PreAuthorize("hasAuthority('user')")
     public ResponseEntity<CreateResponse> createOrder(Order order, Authentication authentication) throws MissingFieldsException, EmptyCartException, OrderTimeException, UserNotFoundException {
+        log.info ("createOrder called");
         if (!order.checkRequiredFields())
             throw new MissingFieldsException("Missing require fields");
         if (order.getFood().size() == 0)
@@ -72,24 +86,25 @@ public class OrderApiController implements OrderApi {
         return orderService.createOrder(order, autheDetails.getId());
     }
 
-
     @PreAuthorize("hasAuthority('user')")
     @GetMapping(path = "/order/user", produces = {"application/json"})
     public ResponseEntity<List<Order>> getUserOrders(Authentication authentication) throws UserNotFoundException {
         AuthDetails authDetails = (AuthDetails) authentication.getPrincipal();
+        log.info ("getUserOrders called");
         return ResponseEntity.ok(orderService.getUserOrders(authDetails.getId()));
     }
 
     @Override
     public ResponseEntity<Void> deleteOrder(Long id) throws ValueNotPresentException {
+        log.info ("deleteOrder called");
         orderService.deleteOrder(id);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-
     @PreAuthorize("hasAuthority ('user')")
     @PostMapping ("/order/charge")
     public ResponseEntity<ChargeResponse> createPaymentIntent (@RequestBody ChargeRequest chargeRequest) {
+        log.info ("createStripeCharge called");
         return ResponseEntity.ok().body(orderService.createStripeCharge(chargeRequest));
     }
 
@@ -97,6 +112,7 @@ public class OrderApiController implements OrderApi {
     @PostMapping ("/order/email-order")
     public ResponseEntity<Order> sendOrderConfirmation (@Valid @RequestBody CreateResponse createResponse, Authentication authentication) throws UserNotFoundException {
         AuthDetails authDetails = (AuthDetails) authentication.getPrincipal();
+        log.info ("sendOrderConfirmation called");
         return ResponseEntity.ok().body(this.orderService.sendOrderConfirmation(Long.parseLong(createResponse.getId()), authDetails.getId()));
     }
 }
