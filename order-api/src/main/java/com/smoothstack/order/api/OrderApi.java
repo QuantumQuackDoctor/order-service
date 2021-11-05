@@ -3,7 +3,7 @@ package com.smoothstack.order.api;
 import com.smoothstack.order.exception.*;
 import com.smoothstack.order.model.CreateResponse;
 import com.smoothstack.order.model.InlineObject;
-import com.smoothstack.order.model.InlineObject2;
+import com.smoothstack.order.model.OrderAction;
 import com.smoothstack.order.model.Order;
 import io.swagger.annotations.*;
 import org.springframework.http.HttpStatus;
@@ -128,35 +128,6 @@ public interface OrderApi {
 
 
     /**
-     * PATCH /order/driver : Driver Update Order
-     * Mark order delivered/picked up
-     *
-     * @param inlineObject2 (optional)
-     * @return Order Delivered (status code 200)
-     * or Unauthorized (status code 401)
-     * or Forbidden (status code 403)
-     * or Order Not Found (status code 404)
-     */
-    @ApiOperation(value = "Driver Update Order", nickname = "driverDeliverOrder", notes = "Mark order delivered/picked up", authorizations = {
-
-            @Authorization(value = "JWT")
-    }, tags = {"order",})
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Order Delivered"),
-            @ApiResponse(code = 401, message = "Unauthorized"),
-            @ApiResponse(code = 403, message = "Forbidden"),
-            @ApiResponse(code = 404, message = "Order Not Found")})
-    @PatchMapping(
-            value = "/order/driver",
-            consumes = {"application/json"}
-    )
-    default ResponseEntity<Void> driverDeliverOrder(@ApiParam(value = "") @Valid @RequestBody(required = false) InlineObject2 inlineObject2) {
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
-
-    }
-
-
-    /**
      * DELETE /order/driver : Driver Cancel Order
      * Removes driver from order, a new driver should be assigned
      *
@@ -181,46 +152,6 @@ public interface OrderApi {
             consumes = {"application/json"}
     )
     default ResponseEntity<Void> driverRemoveOrder(@ApiParam(value = "orderId") @Valid @RequestBody(required = false) String body) {
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
-
-    }
-
-
-    /**
-     * GET /order/driver : Driver Get Accepted Orders
-     * Returns all orders assigned to driver
-     *
-     * @return OK (status code 200)
-     * or Access token is missing or invalid (status code 401)
-     * or Forbidden (status code 403)
-     */
-    @ApiOperation(value = "Driver Get Accepted Orders", nickname = "getAcceptedOrders", notes = "Returns all orders assigned to driver", response = Order.class, responseContainer = "List", authorizations = {
-
-            @Authorization(value = "JWT")
-    }, tags = {"order",})
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK", response = Order.class, responseContainer = "List"),
-            @ApiResponse(code = 401, message = "Access token is missing or invalid", response = String.class),
-            @ApiResponse(code = 403, message = "Forbidden")})
-    @GetMapping(
-            value = "/order/driver",
-            produces = {"application/json", "application/xml"}
-    )
-    default ResponseEntity<List<Order>> getAcceptedOrders() {
-        getRequest().ifPresent(request -> {
-            for (MediaType mediaType : MediaType.parseMediaTypes(request.getHeader("Accept"))) {
-                if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                    String exampleString = "{ \"orderType\" : \"delivery\", \"driverNote\" : \"driverNote\", \"address\" : \"address\", \"orderTime\" : { \"driverAccept\" : \"2021-02-10T00:00:00.000Z\", \"orderPlaced\" : \"2021-02-10T00:00:00.000Z\", \"deliverySlot\" : \"2021-02-10T00:00:00.000Z\", \"restaurantStart\" : \"2021-02-10T00:00:00.000Z\", \"delivered\" : \"2021-02-10T00:00:00.000Z\", \"restaurantAccept\" : \"2021-02-10T00:00:00.000Z\", \"restaurantComplete\" : \"2021-02-10T00:00:00.000Z\" }, \"driverId\" : \"driverId\", \"price\" : { \"delivery\" : 6.027456183070403, \"tip\" : 1.4658129805029452, \"food\" : 0.8008281904610115 }, \"refunded\" : true, \"id\" : \"id\", \"restaurantId\" : \"restaurantId\", \"food\" : [ { \"restaurantId\" : \"restaurantId\", \"items\" : [ { \"configurations\" : [ \"configurations\", \"configurations\" ], \"name\" : \"name\" }, { \"configurations\" : [ \"configurations\", \"configurations\" ], \"name\" : \"name\" } ] }, { \"restaurantId\" : \"restaurantId\", \"items\" : [ { \"configurations\" : [ \"configurations\", \"configurations\" ], \"name\" : \"name\" }, { \"configurations\" : [ \"configurations\", \"configurations\" ], \"name\" : \"name\" } ] } ] }";
-                    ApiUtil.setExampleResponse(request, "application/json", exampleString);
-                    break;
-                }
-                if (mediaType.isCompatibleWith(MediaType.valueOf("application/xml"))) {
-                    String exampleString = "<Order> <id>aeiou</id> <orderType>aeiou</orderType> <driverId>aeiou</driverId> <restaurantId>aeiou</restaurantId> <driverNote>aeiou</driverNote> <address>aeiou</address> <refunded>true</refunded> </Order>";
-                    ApiUtil.setExampleResponse(request, "application/xml", exampleString);
-                    break;
-                }
-            }
-        });
         return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
 
     }
