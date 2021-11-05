@@ -51,7 +51,7 @@ public interface OrderApi {
             consumes = {"application/json", "application/xml"}
     )
     default ResponseEntity<CreateResponse> createOrder(@ApiParam(value = "") @Valid @RequestBody(required = false) Order order,
-                                                       Authentication authentication) throws EmptyCartException, MissingFieldsException, OrderTimeException, UserNotFoundException {
+                                                       Authentication authentication, @RequestParam String chargdId) throws EmptyCartException, MissingFieldsException, OrderTimeException, UserNotFoundException {
         getRequest().ifPresent(request -> {
             for (MediaType mediaType : MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {

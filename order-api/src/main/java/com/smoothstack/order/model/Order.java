@@ -19,7 +19,7 @@ import java.util.Objects;
 @Data
 public class Order   {
   @JsonProperty("id")
-  private String id;
+  private Long id;
 
   /**
    * Gets or Sets orderType

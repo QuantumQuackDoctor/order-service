@@ -56,7 +56,7 @@ class OrderServiceTest {
 
         Order orderDTO = orderService.convertToDTO(orderEntity);
 
-        CreateResponse insertedResponse = orderService.createOrder(orderDTO, 500L).getBody();
+        CreateResponse insertedResponse = orderService.createOrder(orderDTO, 500L, "").getBody();
 
         assert insertedResponse != null;
         assertEquals(orderDTO.getAddress(), insertedResponse.getAddress());
@@ -67,7 +67,7 @@ class OrderServiceTest {
 
         orderDTO.setOrderTime(newDeliveryTime);
 
-        assertThrows(OrderTimeException.class, () -> orderService.createOrder(orderDTO, 500L));
+        assertThrows(OrderTimeException.class, () -> orderService.createOrder(orderDTO, 500L, ""));
 
     }
 
@@ -93,7 +93,7 @@ class OrderServiceTest {
 
         Order orderDTO = orderService.convertToDTO(orderEntity);
 
-        CreateResponse insertedResponse = orderService.createOrder(orderDTO, 500L).getBody();
+        CreateResponse insertedResponse = orderService.createOrder(orderDTO, 500L, "").getBody();
 
         assert insertedResponse != null;
         assertEquals(orderDTO.getAddress(), insertedResponse.getAddress());
