@@ -1,7 +1,7 @@
     pipeline {
         agent any
-        environment {
-            AWS_REGION = 'us-east-2'
+        parameters {
+            string(name: 'Environment', defaultValue: params.Environment ?: 'dev')
         }
         tools {
             maven "Maven"
@@ -39,13 +39,28 @@
                     script {
                         withCredentials([string(credentialsId:'cfe0c5bd-0177-404d-83e1-bbb3044b52d0', variable:'AWS_ID')])
                         {
-                            sh 'aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com'
-                            sh 'docker build -t java-order-service .'
-                            sh 'docker tag java-order-service:latest ${AWS_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/java-order-service:latest'
-                            sh 'docker push ${AWS_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/java-order-service:latest'
+                            sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+                            sh "docker build -t order-service-${params.Environment} ."
+                            sh "docker tag order-service-${params.Environment}:latest ${AWS_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/order-service-${params.Environment}:latest"
+                            sh "docker push ${AWS_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/order-service-${params.Environment}:latest"
                         }
                     }
                 }
             }
+            stage('Template Update'){
+                steps {
+                    withCredentials ([string(credentialsId:'cfe0c5bd-0177-404d-83e1-bbb3044b52d0', variable:'AWS_ID')])
+                    {
+                        sh "aws cloudformation deploy --stack-name OrderServiceStack-${params.Environment} --region ${AWS_REGION} --template-file orderService.template --parameter-overrides ImageURL=${AWS_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/order-service-${params.Environment}:latest BaseStackName=BaseInfrastructure --capabilities CAPABILITY_NAMED_IAM"
+                    }
+                }
+            }
+        }
+    post {
+        success {
+            script {
+                sh 'docker image prune -f -a'
+            }
         }
     }
+}

@@ -43,7 +43,7 @@ public class OrderService {
     private final AmazonSimpleEmailService emailService;
     @Value("${email.sender}")
     private String emailFrom;
-    @Value ("${stripe.key}")
+    @Value("${stripe.key}")
     private String stripeKey;
     private final String TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
@@ -170,7 +170,9 @@ public class OrderService {
         List<Order> orderDTOs = new ArrayList<>();
         for (OrderEntity orderEntity : orderEntities) {
             if (orderEntity.getRefunded() == null || !orderEntity.getRefunded())
-                orderDTOs.add(convertToDTO(orderEntity));
+                if (orderEntity.getDriver() == null) {
+                    orderDTOs.add(convertToDTO(orderEntity));
+                }
         }
 
         orderDTOs = sortList(orderDTOs, sortType);
@@ -224,6 +226,14 @@ public class OrderService {
 
 
 
+    public ResponseEntity<Void> patchDriverOrders(Long order, Long driver, Boolean assign) {
+        OrderEntity orderEntity = orderRepo.findById(order).get();
+        DriverEntity driverEntity = driverRepo.findById(driver).get();
+        orderEntity.setDriver(driverEntity);
+        orderRepo.save(orderEntity);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     public Order convertToDTO(OrderEntity orderEntity) {
         Order orderDTO = modelMapper.map(orderEntity, Order.class);
 
@@ -274,6 +284,8 @@ public class OrderService {
     }
 
     public OrderOrderTime convertTimeToDTO(OrderTimeEntity orderTimeEntity) {
+        String TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(TIME_FORMAT);
         OrderOrderTime orderTimeDTO = new OrderOrderTime();
         if (orderTimeEntity.getPlaced() != null) {
             String orderPlaced = DateTimeFormatter.ofPattern(TIME_FORMAT).format(
@@ -281,20 +293,26 @@ public class OrderService {
             orderTimeDTO.setOrderPlaced(orderPlaced);
         }
         if (orderTimeEntity.getOrderComplete() != null) {
-            String orderComplete = DateTimeFormatter.ofPattern(TIME_FORMAT).format(
+            String orderComplete = formatter.format(
                     orderTimeEntity.getOrderComplete());
             orderTimeDTO.setDelivered(orderComplete);
         }
         if (orderTimeEntity.getDeliverySlot() != null) {
-            String deliverySlot = DateTimeFormatter.ofPattern(TIME_FORMAT).format(
-                    orderTimeEntity.getDeliverySlot());
-            orderTimeDTO.setDeliverySlot(deliverySlot);
+        orderTimeDTO.setDeliverySlot(formatter.format(
+                orderTimeEntity.getDeliverySlot()));
         }
         if (orderTimeEntity.getRestaurantAccept() != null) {
-            String restaurantAccept = DateTimeFormatter.ofPattern(TIME_FORMAT).format(
-                    orderTimeEntity.getRestaurantAccept());
-            orderTimeDTO.setRestaurantAccept(restaurantAccept);
+        orderTimeDTO.setRestaurantAccept(formatter.format(
+                orderTimeEntity.getRestaurantAccept()));
         }
+        if (orderTimeEntity.getDriverPickUp() != null)
+            orderTimeDTO.setDriverPickUp(formatter.format(orderTimeEntity.getDriverPickUp()));
+        if (orderTimeEntity.getDriverAccept() != null)
+            orderTimeDTO.setDriverAccept(formatter.format(orderTimeEntity.getDriverAccept()));
+        if (orderTimeEntity.getDriverComplete() != null)
+            orderTimeDTO.setDelivered(formatter.format(orderTimeEntity.getDriverComplete()));
+        if (orderTimeEntity.getRestaurantComplete() != null)
+            orderTimeDTO.setRestaurantComplete(formatter.format(orderTimeEntity.getRestaurantComplete()));
         return orderTimeDTO;
     }
 
@@ -371,8 +389,8 @@ public class OrderService {
 
     public Order sendOrderConfirmation(Long orderId, Long userId) throws UserNotFoundException {
         StringBuilder builder = new StringBuilder();
-        Optional <UserEntity> userEntityOptional = userRepo.findById(userId);
-        if (userEntityOptional.isPresent()){
+        Optional<UserEntity> userEntityOptional = userRepo.findById(userId);
+        if (userEntityOptional.isPresent()) {
             UserEntity entity = userEntityOptional.get();
             if (entity.getSettings().getNotifications().getEmailOrder()) {
                 log.info ("senOrderConfirmation: user email order details option active");

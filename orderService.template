@@ -1,0 +1,141 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "order service template for use with jenkins"
+Parameters:
+  ImageURL:
+    Type: String
+  Environment:
+    Type: String
+    Default: prod
+    AllowedValues:
+      - "prod"
+      - "dev"
+      - "test"
+Resources:
+  OrderServiceLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 3
+      LogGroupName: !Sub "OrderServiceGroup-${Environment}"
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+                - ecs.amazonaws.com
+                - ecs-tasks.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Path: /
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+        - "arn:aws:iam::aws:policy/AmazonECS_FullAccess"
+      Policies:
+        - PolicyName: AccessECR
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ecr:BatchGetImage"
+                  - "ecr:GetAuthorizationToken"
+                  - "ecr:GetDownloadUrlForLayer"
+                Resource: "*"
+        - PolicyName: AccessSES
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ses:SendEmail"
+                  - "ses:SendTemplatedEmail"
+                  - "ses:SendRawEmail"
+                  - "ses:SendBulkTemplatedEmail"
+                Resource: "*"
+  OrderTaskDefinition:
+    Type: "AWS::ECS::TaskDefinition"
+    Properties:
+      ContainerDefinitions:
+        - Name: OrderApp
+          Cpu: 512
+          Memory: 1024
+          Image: !Ref ImageURL
+          PortMappings:
+            - ContainerPort: 8080
+              HostPort: 8080
+              Protocol: tcp
+          Environment:
+            - Name: SPRING_APPLICATION_JSON
+              Value: !Sub >
+                {
+                  "spring":{
+                      "datasource":{
+                        "url":"jdbc:postgresql://{{resolve:secretsmanager:DBEndpoint-${Environment}}}:{{resolve:secretsmanager:DBPort-${Environment}}}/{{resolve:secretsmanager:DBName-${Environment}}}",
+                        "username":"{{resolve:secretsmanager:DBUsername-${Environment}}}",
+                        "password":"{{resolve:secretsmanager:DBPassword-${Environment}}}"
+                      }
+                  },
+                  "jwt":{
+                      "secret":"{{resolve:secretsmanager:JwtSecret-${Environment}}}"
+                  },
+                  "server":{
+                      "port":"8080"
+                  },
+                  "email": {
+                    "region": "us-east-2",
+                    "sender": "scrumptiousdoctor@gmail.com"
+                  },
+                  "stripe": {
+                    "key": "{{resolve:secretsmanager:stripe.key}}"
+                  }
+                }
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref OrderServiceLogGroup
+              awslogs-stream-prefix: OrderService
+              awslogs-region: !Ref "AWS::Region"
+      Cpu: 512
+      Memory: 1024
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      ExecutionRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/ecsTaskExecutionRole"
+  OrderService:
+    Type: "AWS::ECS::Service"
+    Properties:
+      Cluster: !Sub "{{resolve:secretsmanager:ECSClusterName-${Environment}}}"
+      LaunchType: FARGATE
+      DesiredCount: 1
+      ServiceName: OrderService
+      LoadBalancers:
+        - ContainerName: OrderApp
+          ContainerPort: 8080
+          TargetGroupArn: !Sub "{{resolve:secretsmanager:OrderTGArn-${Environment}}}"
+      TaskDefinition: !Ref OrderTaskDefinition
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          SecurityGroups:
+            - !Sub "{{resolve:secretsmanager:ServiceSecurityGroup-${Environment}}}"
+          Subnets:
+            - !Sub "{{resolve:secretsmanager:PrivateSubnet1-${Environment}}}"
+            - !Sub "{{resolve:secretsmanager:PrivateSubnet2-${Environment}}}"
+  ListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Sub "{{resolve:secretsmanager:OrderTGArn-${Environment}}}"
+      Conditions:
+        - Field: path-pattern
+          PathPatternConfig:
+            Values:
+              - /order/*
+              - /orders/*
+      Priority: 5
+      ListenerArn: !Sub "{{resolve:secretsmanager:LBListenerARN-${Environment}}}"
