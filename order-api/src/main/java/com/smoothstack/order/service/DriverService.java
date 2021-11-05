@@ -19,11 +19,10 @@ public class DriverService {
     private final OrderService orderService;
 
     public void pickUpOrder(Long orderId, Long driverId) throws OrderNotFoundException, OrderNotAcceptedException {
-        System.out.println("OrderId: " + orderId);
         OrderEntity order = orderRepo.findById(orderId).orElseThrow(
                 () -> new OrderNotFoundException("order does not exist"));
 
-        if (order.getDriver() != null && order.getDriver().getId().equals(driverId)) {
+        if (orderValid(order, driverId)) {
             order.getOrderTimeEntity().setDriverPickUp(ZonedDateTime.now());
             orderRepo.save(order);
         } else {
@@ -37,17 +36,21 @@ public class DriverService {
     }
 
     public void deliverOrder(Long orderId, Long driverId) throws OrderNotFoundException, OrderNotAcceptedException {
-        System.out.println("OrderId: " + orderId);
         OrderEntity order = orderRepo.findById(orderId).orElseThrow(
                 () -> new OrderNotFoundException("order does not exist"));
 
-        if (order.getDriver() != null && order.getDriver().getId().equals(driverId)) {
+        if (orderValid(order, driverId)) {
             if (order.getOrderTimeEntity().getDriverPickUp() == null)
                 order.getOrderTimeEntity().setDriverPickUp(ZonedDateTime.now());
             order.getOrderTimeEntity().setDriverComplete(ZonedDateTime.now());
+            order.setActive(false);
             orderRepo.save(order);
         } else {
             throw new OrderNotAcceptedException();
         }
+    }
+
+    private boolean orderValid(OrderEntity order, Long driverId){
+        return order.getActive() && order.getDriver() != null && order.getDriver().getId().equals(driverId);
     }
 }

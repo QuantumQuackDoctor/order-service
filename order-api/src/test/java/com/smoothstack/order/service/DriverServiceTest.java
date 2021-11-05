@@ -16,8 +16,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest(classes = {DriverService.class, OrderService.class})
@@ -75,6 +74,7 @@ class DriverServiceTest {
         verify(orderRepo, times(1)).save(orderCaptor.capture());
 
         assertNotNull(orderCaptor.getValue().getOrderTimeEntity().getDriverComplete());
+        assertFalse(orderCaptor.getValue().getActive());
     }
 
     @Test
