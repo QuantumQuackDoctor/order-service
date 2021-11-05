@@ -53,7 +53,6 @@ public class OrderFood   {
   */
   @ApiModelProperty(value = "")
 
-
   public String getRestaurantId() {
     return restaurantId;
   }
