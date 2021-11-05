@@ -90,6 +90,39 @@ public class OrderService {
         return null;
     }
 
+    public ResponseEntity<Void> patchOrders(Order order) {
+        OrderEntity orderEntity = convertToEntity(order);
+        orderRepo.save(orderEntity);
+        log.info ("patchOrders: order updated");
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    public ResponseEntity<String> patchOrder(Order order, Long userId) throws ValueNotPresentException {
+        OrderEntity orderEntity = orderRepo.findById(Long.parseLong(order.getId())).orElseThrow(() ->
+                new ValueNotPresentException("Order not found"));
+        if (!Objects.equals(orderEntity.getUser().getId(), userId))
+            return ResponseEntity.status(401).body("Order does not belong to this user");
+
+        orderEntity.setRestaurantNote(order.getRestaurantNote());
+        orderEntity.setDriverNote(order.getDriverNote());
+        orderRepo.save(orderEntity);
+        log.info ("patchOrders: order updated");
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    public ResponseEntity <String> cancelOrder (Long orderId, Long userId) throws ValueNotPresentException {
+        OrderEntity orderEntity = orderRepo.findById(orderId).orElseThrow(() ->
+                new ValueNotPresentException("Order not found"));
+        if (!Objects.equals(orderEntity.getUser().getId(), userId))
+            return ResponseEntity.status(401).body("Order does not belong to this user");
+
+        orderEntity.setRecordId(userId);
+        orderEntity.setUser(null);
+        orderRepo.save(orderEntity);
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     public ResponseEntity<CreateResponse> createOrder(Order orderDTO, Long userId)
             throws OrderTimeException, UserNotFoundException {
         OrderEntity orderEntity = convertToEntity(orderDTO);
@@ -101,8 +134,8 @@ public class OrderService {
         }
         if (orderEntity.getDelivery()) {
             ZonedDateTime deliverySlot = orderEntity.getOrderTimeEntity().getDeliverySlot();
-            ZonedDateTime restaurantAccept = orderEntity.getOrderTimeEntity().getRestaurantAccept();
-            long diff = ChronoUnit.MINUTES.between(restaurantAccept, deliverySlot);
+            ZonedDateTime placed = orderEntity.getOrderTimeEntity().getPlaced();
+            long diff = ChronoUnit.MINUTES.between(placed, deliverySlot);
             if (diff < 15) throw new OrderTimeException("Time slot too early");
         }
         orderEntity = orderRepo.save(orderEntity);
@@ -191,12 +224,7 @@ public class OrderService {
         return t1.toInstant().compareTo(t2.toInstant());
     }
 
-    public ResponseEntity<Void> patchOrders(Order order) {
-        OrderEntity orderEntity = convertToEntity(order);
-        orderRepo.save(orderEntity);
-        log.info ("patchOrders: order updated");
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
+
 
     public ResponseEntity<Void> patchDriverOrders(Long order, Long driver, Boolean assign) {
         OrderEntity orderEntity = orderRepo.findById(order).get();
@@ -259,10 +287,23 @@ public class OrderService {
         String TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(TIME_FORMAT);
         OrderOrderTime orderTimeDTO = new OrderOrderTime();
+        if (orderTimeEntity.getPlaced() != null) {
+            String orderPlaced = DateTimeFormatter.ofPattern(TIME_FORMAT).format(
+                    orderTimeEntity.getPlaced());
+            orderTimeDTO.setOrderPlaced(orderPlaced);
+        }
         if (orderTimeEntity.getOrderComplete() != null) {
             String orderComplete = formatter.format(
                     orderTimeEntity.getOrderComplete());
             orderTimeDTO.setDelivered(orderComplete);
+        }
+        if (orderTimeEntity.getDeliverySlot() != null) {
+        orderTimeDTO.setDeliverySlot(formatter.format(
+                orderTimeEntity.getDeliverySlot()));
+        }
+        if (orderTimeEntity.getRestaurantAccept() != null) {
+        orderTimeDTO.setRestaurantAccept(formatter.format(
+                orderTimeEntity.getRestaurantAccept()));
         }
         if (orderTimeEntity.getDriverPickUp() != null)
             orderTimeDTO.setDriverPickUp(formatter.format(orderTimeEntity.getDriverPickUp()));
@@ -272,11 +313,6 @@ public class OrderService {
             orderTimeDTO.setDelivered(formatter.format(orderTimeEntity.getDriverComplete()));
         if (orderTimeEntity.getRestaurantComplete() != null)
             orderTimeDTO.setRestaurantComplete(formatter.format(orderTimeEntity.getRestaurantComplete()));
-        orderTimeDTO.setDeliverySlot(formatter.format(
-                orderTimeEntity.getDeliverySlot()));
-        orderTimeDTO.setRestaurantAccept(formatter.format(
-                orderTimeEntity.getRestaurantAccept()));
-
         return orderTimeDTO;
     }
 
@@ -312,7 +348,12 @@ public class OrderService {
             orderEntity.setItems(foodOrderEntities);
             orderEntity.setOrderTimeEntity(new OrderTimeEntity().setDeliverySlot(
                             ZonedDateTime.parse(orderDTO.getOrderTime().getDeliverySlot()))
-                    .setRestaurantAccept(ZonedDateTime.parse(orderDTO.getOrderTime().getRestaurantAccept())));
+                    .setPlaced(ZonedDateTime.parse(orderDTO.getOrderTime().getOrderPlaced())));
+
+            if (orderDTO.getOrderTime().getRestaurantAccept() != null){
+                orderEntity.setOrderTimeEntity(orderEntity.getOrderTimeEntity().setRestaurantAccept(
+                        ZonedDateTime.parse(orderDTO.getOrderTime().getRestaurantAccept())));
+            }
 
             PriceEntity priceEntity = modelMapper.map(orderDTO.getPrice(), PriceEntity.class);
             orderEntity.setPriceEntity(priceEntity);

@@ -94,6 +94,29 @@ public interface OrderApi {
 
     }
 
+    /**
+     * DELETE /order/user : User cancel order
+     * Create new order, sends back checkout session data. Payment intent will be canceled in 5 minutes if not paid. (Server note: use stripe webhooks to update payment status)
+     *
+     * @param order (optional)
+     * @return OK (status code 200)
+     * or Access token is missing or invalid (status code 401)
+     * or Forbidden (status code 403)
+     */
+    @ApiOperation(value = "Delete order", nickname = "deleteOrder", notes = "Delete order by id",
+            response = CreateResponse.class, tags = {"order",})
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK", response = CreateResponse.class),
+            @ApiResponse(code = 401, message = "Access token is missing or invalid", response = String.class),
+            @ApiResponse(code = 403, message = "Forbidden")})
+    @DeleteMapping(
+            path = "/order/user",
+            produces = {"application/json", "application/xml"}
+    )
+    default ResponseEntity<String> cancelOrder(@ApiParam(value = "id") @Valid @RequestParam(value = "id", required = true)
+                                                         Long orderId, Authentication authentication) throws ValueNotPresentException {
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+    }
 
     /**
      * PUT /order/driver : Driver Accept Orders
@@ -291,7 +314,37 @@ public interface OrderApi {
             produces = {"application/json"},
             consumes = {"application/json"}
     )
-    default ResponseEntity<Void> patchOrders(@ApiParam(value = "Order to update, non null properties will be updated, id necessary") @Valid @RequestBody(required = false) Order order) {
+    default ResponseEntity<Void> patchOrders(@ApiParam(value = "Order to update, non null properties will be updated, id necessary")
+                                                 @Valid @RequestBody(required = false) Order order) {
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+    }
+
+    /**
+     * PATCH /order/details : User Update Order
+     * Update order, use this to connect orders with drivers (set driverId)
+     *
+     * @param order Order to update, non null properties will be updated, id necessary (optional)
+     * @return Update successful (status code 200)
+     * or Access token is missing or invalid (status code 401)
+     * or Forbidden (status code 403)
+     * or Not Found (status code 404)
+     */
+    @ApiOperation(value = "User Update Order", nickname = "patchOrders", notes = "Users use this to update order details", authorizations = {
+
+            @Authorization(value = "JWT")
+    }, tags = {"order",})
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Update successful"),
+            @ApiResponse(code = 401, message = "Access token is missing or invalid", response = String.class),
+            @ApiResponse(code = 403, message = "Forbidden"),
+            @ApiResponse(code = 404, message = "Not Found")})
+    @PatchMapping(
+            value = "/order/details",
+            produces = {"application/json"},
+            consumes = {"application/json"}
+    )
+    default ResponseEntity<String> patchOrder(@ApiParam(value = "Order to update, non null properties will be updated, id necessary")
+                                             @Valid @RequestBody(required = false) Order order, Authentication authentication) throws ValueNotPresentException {
         return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
     }
 
