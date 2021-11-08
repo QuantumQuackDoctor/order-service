@@ -374,7 +374,6 @@ public class OrderService {
     }
 
     public OrderOrderTime convertTimeToDTO(OrderTimeEntity orderTimeEntity) {
-        String TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(TIME_FORMAT);
         OrderOrderTime orderTimeDTO = new OrderOrderTime();
         if (orderTimeEntity.getPlaced() != null) {
