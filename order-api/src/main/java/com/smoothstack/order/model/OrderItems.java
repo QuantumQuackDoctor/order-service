@@ -22,6 +22,9 @@ public class OrderItems {
     @JsonProperty("name")
     private String name;
 
+    @JsonProperty ("price")
+    private Float price;
+
     @JsonProperty("quantity")
     private Integer quantity;
 
