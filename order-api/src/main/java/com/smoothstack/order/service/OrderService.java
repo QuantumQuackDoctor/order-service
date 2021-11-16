@@ -439,7 +439,7 @@ public class OrderService {
         return orderEntity;
     }
 
-    public OrderTimeEntity convertTimeDTOToEntity(OrderOrderTime orderTimeDTO) {
+    private OrderTimeEntity convertTimeDTOToEntity(OrderOrderTime orderTimeDTO) {
         OrderTimeEntity orderTimeEntity = new OrderTimeEntity();
         if (orderTimeDTO.getOrderPlaced() != null)
             orderTimeEntity.setPlaced(ZonedDateTime.parse(orderTimeDTO.getOrderPlaced()));

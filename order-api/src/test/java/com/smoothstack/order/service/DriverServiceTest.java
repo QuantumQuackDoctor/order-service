@@ -23,6 +23,8 @@ import static org.mockito.Mockito.*;
 class DriverServiceTest {
     @MockBean
     OrderRepo orderRepo;
+    @MockBean
+    OrderService orderService;
     @Autowired
     DriverService driverService;
 
