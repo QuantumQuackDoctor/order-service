@@ -32,7 +32,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@Slf4j (topic = "Order Service Logs")
+@Slf4j(topic = "Order Service Logs")
 public class OrderService {
 
     private final OrderRepo orderRepo;
@@ -44,7 +44,7 @@ public class OrderService {
     private final AmazonSimpleEmailService emailService;
     @Value("${email.sender}")
     private String emailFrom;
-    @Value ("${stripe.key}")
+    @Value("${stripe.key}")
     private String stripeKey;
     private final String TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
@@ -386,14 +386,10 @@ public class OrderService {
                     orderTimeEntity.getOrderComplete());
             orderTimeDTO.setDelivered(orderComplete);
         }
-        if (orderTimeEntity.getDeliverySlot() != null) {
-        orderTimeDTO.setDeliverySlot(formatter.format(
-                orderTimeEntity.getDeliverySlot()));
-        }
-        if (orderTimeEntity.getRestaurantAccept() != null) {
-        orderTimeDTO.setRestaurantAccept(formatter.format(
-                orderTimeEntity.getRestaurantAccept()));
-        }
+        if (orderTimeEntity.getDeliverySlot() != null)
+            orderTimeDTO.setDeliverySlot(formatter.format(orderTimeEntity.getDeliverySlot()));
+        if (orderTimeEntity.getRestaurantAccept() != null)
+            orderTimeDTO.setRestaurantAccept(formatter.format(orderTimeEntity.getRestaurantAccept()));
         if (orderTimeEntity.getDriverPickUp() != null)
             orderTimeDTO.setDriverPickUp(formatter.format(orderTimeEntity.getDriverPickUp()));
         if (orderTimeEntity.getDriverAccept() != null)
@@ -428,28 +424,40 @@ public class OrderService {
                         foodOrderEntity.setMenuItem(menuItemRepo.findById(Long.parseLong(orderItemDTO.getId())).get());
                         OrderConfigurationEntity configurationEntity = new OrderConfigurationEntity()
                                 .setConfigurationName(orderItemDTO.getId() + " Quantity: " + orderItemDTO.getConfigurations().get(0));
-                        configurationEntities.add(configurationEntity)
-;                        foodOrderEntity.setConfigurations(configurationEntities);
+                        configurationEntities.add(configurationEntity);
+                        foodOrderEntity.setConfigurations(configurationEntities);
                         foodOrderEntities.add(foodOrderEntity);
                     }
                 }
             }
             orderEntity.setItems(foodOrderEntities);
-            orderEntity.setOrderTimeEntity(new OrderTimeEntity().setDeliverySlot(
-                            ZonedDateTime.parse(orderDTO.getOrderTime().getDeliverySlot()))
-                    .setPlaced(ZonedDateTime.parse(orderDTO.getOrderTime().getOrderPlaced())));
-
-            if (orderDTO.getOrderTime().getRestaurantAccept() != null) {
-                orderEntity.setOrderTimeEntity(orderEntity.getOrderTimeEntity().setRestaurantAccept(
-                        ZonedDateTime.parse(orderDTO.getOrderTime().getRestaurantAccept())));
-            }
-
             PriceEntity priceEntity = modelMapper.map(orderDTO.getPrice(), PriceEntity.class);
             orderEntity.setPriceEntity(priceEntity);
-
         }
+
+        orderEntity.setOrderTimeEntity(convertTimeDTOToEntity(orderDTO.getOrderTime()));
         return orderEntity;
     }
+
+    public OrderTimeEntity convertTimeDTOToEntity(OrderOrderTime orderTimeDTO) {
+        OrderTimeEntity orderTimeEntity = new OrderTimeEntity();
+        if (orderTimeDTO.getOrderPlaced() != null)
+            orderTimeEntity.setPlaced(ZonedDateTime.parse(orderTimeDTO.getOrderPlaced()));
+        if (orderTimeDTO.getDriverAccept() != null)
+            orderTimeEntity.setDriverAccept(ZonedDateTime.parse(orderTimeDTO.getDriverAccept()));
+        if (orderTimeDTO.getDeliverySlot() != null)
+            orderTimeEntity.setDeliverySlot(ZonedDateTime.parse(orderTimeDTO.getDeliverySlot()));
+        if (orderTimeDTO.getDriverPickUp() != null)
+            orderTimeEntity.setDriverPickUp(ZonedDateTime.parse(orderTimeDTO.getDriverPickUp()));
+        if (orderTimeDTO.getRestaurantComplete() != null)
+            orderTimeEntity.setRestaurantComplete(ZonedDateTime.parse(orderTimeDTO.getOrderPlaced()));
+        if (orderTimeDTO.getRestaurantAccept() != null)
+            orderTimeEntity.setRestaurantAccept(ZonedDateTime.parse(orderTimeDTO.getRestaurantAccept()));
+        if (orderTimeDTO.getDelivered() != null)
+            orderTimeEntity.setOrderComplete(ZonedDateTime.parse(orderTimeDTO.getDelivered()));
+        return orderTimeEntity;
+    }
+
 
     /*
     Section for stripe operations
@@ -471,11 +479,11 @@ public class OrderService {
             charge = Charge.create(params);
             chargeResponse = new ChargeResponse(charge.toJson(), "");
         } catch (StripeException e) {
-            log.error ("Stripe Error:" + e.getMessage());
+            log.error("Stripe Error:" + e.getMessage());
             chargeResponse = new ChargeResponse(null, e.getMessage().split(";")[0]);
         }
 
-        log.info ("createStripeCharge: Stripe charge successfully created.");
+        log.info("createStripeCharge: Stripe charge successfully created.");
         return chargeResponse;
     }
 

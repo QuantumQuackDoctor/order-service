@@ -84,7 +84,7 @@ class OrderServiceTest {
     }
 
     @Test
-    void createDeleteOrderTest() throws OrderTimeException, UserNotFoundException {
+    void deleteOrderNoOrder() throws OrderTimeException, UserNotFoundException {
         OrderEntity orderEntity = getSampleOrder();
 
         Mockito.when(userRepo.findById(anyLong())).thenReturn(sampleUser());
@@ -135,7 +135,7 @@ class OrderServiceTest {
                 .setDeliverySlot(ZonedDateTime.ofInstant(
                         Instant.parse("2011-12-03T10:35:30.000Z"),
                         ZoneOffset.UTC))
-                .setRestaurantAccept(ZonedDateTime.ofInstant(
+                .setPlaced(ZonedDateTime.ofInstant(
                         Instant.parse("2011-12-03T10:15:30.000Z"),
                         ZoneOffset.UTC));
 
