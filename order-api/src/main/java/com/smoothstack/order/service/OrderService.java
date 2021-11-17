@@ -42,6 +42,7 @@ public class OrderService {
     private final RestaurantRepo restaurantRepo;
     private final UserRepo userRepo;
     private final AmazonSimpleEmailService emailService;
+
     @Value("${email.sender}")
     private String emailFrom;
     @Value("${stripe.key}")
@@ -75,7 +76,6 @@ public class OrderService {
         foodOrderRepo.deleteAll(foodOrderEntityList);
         orderRepo.deleteById(id);
         log.info("Delete Order: Order deleted");
-        ResponseEntity.ok(null);
     }
 
     /**
@@ -156,8 +156,7 @@ public class OrderService {
         Optional<UserEntity> userEntityOptional = userRepo.findById(userId);
         if (userEntityOptional.isPresent()) {
             List<Order> orderList = new ArrayList<>();
-            orderRepo.getOrderByUser(userId).forEach(orderEntity ->
-                    orderList.add(convertToDTO(orderEntity)));
+            orderRepo.getOrderByUser(userId).forEach(orderEntity -> orderList.add(convertToDTO(orderEntity)));
             log.info("User order list retrieved");
             return orderList;
         }

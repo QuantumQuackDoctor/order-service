@@ -13,8 +13,10 @@ import com.smoothstack.order.model.OrderOrderTime;
 import com.smoothstack.order.repo.OrderRepo;
 import com.smoothstack.order.repo.RestaurantRepo;
 import com.smoothstack.order.repo.UserRepo;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -26,8 +28,7 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.*;
 
 @SpringBootTest
 class OrderServiceTest {
@@ -44,14 +45,19 @@ class OrderServiceTest {
     @Autowired
     private OrderService orderService;
 
+    @BeforeEach
+    void setUp() {
+        Mockito.when(userRepo.findById(anyLong())).thenReturn(sampleUser());
+        Mockito.when(orderRepo.save(Mockito.any())).thenReturn(getSampleOrder());
+        Mockito.when(restaurantRepo.findById(Mockito.any()))
+                .thenReturn(Optional.of(new RestaurantEntity().setName("Sample Restaurant").setId(1L)));
+    }
+
     @Test
     void createOrderTest() throws OrderTimeException, UserNotFoundException {
 
         OrderEntity orderEntity = getSampleOrder();
 
-        Mockito.when(userRepo.findById(anyLong())).thenReturn(sampleUser());
-        Mockito.when(orderRepo.save(Mockito.any())).thenReturn(getSampleOrder());
-        Mockito.when(restaurantRepo.findById(Mockito.any())).thenReturn(Optional.of(new RestaurantEntity().setName("Sample Restaurant").setId(1L)));
         //inserts sample items in empty db
 
         Order orderDTO = orderService.convertToDTO(orderEntity);
@@ -73,23 +79,19 @@ class OrderServiceTest {
 
     @Test
     void getUserOrderNormal() throws UserNotFoundException {
-        Mockito.when(userRepo.findById(anyLong())).thenReturn(sampleUser());
         List<Order> orderList = orderService.getUserOrders(1L);
         assertEquals(0, orderList.size());
     }
 
     @Test
     void getUserOrderException() {
+        Mockito.when(userRepo.findById(anyLong())).thenReturn(Optional.empty());
         assertThrows(UserNotFoundException.class, () -> orderService.getUserOrders(1L));
     }
 
     @Test
     void deleteOrderNoOrder() throws OrderTimeException, UserNotFoundException {
         OrderEntity orderEntity = getSampleOrder();
-
-        Mockito.when(userRepo.findById(anyLong())).thenReturn(sampleUser());
-        Mockito.when(orderRepo.save(Mockito.any())).thenReturn(getSampleOrder());
-        Mockito.when(restaurantRepo.findById(Mockito.any())).thenReturn(Optional.of(new RestaurantEntity().setName("Sample Restaurant")));
 
         Order orderDTO = orderService.convertToDTO(orderEntity);
 
@@ -115,10 +117,10 @@ class OrderServiceTest {
     }
 
     @Test
-    void getActiveOrdersNormal () {
+    void getActiveOrdersNormal() {
         Iterable<OrderEntity> orderEntityIterable = Collections.singletonList(getSampleOrder());
 
-        Mockito.when (orderRepo.findAll()).thenReturn(orderEntityIterable);
+        Mockito.when(orderRepo.findAll()).thenReturn(orderEntityIterable);
 
         assertEquals(Objects.requireNonNull(orderService.getActiveOrders("time", 0, 1).getBody()).size(), 1);
         assertEquals(Objects.requireNonNull(orderService.getActiveOrders("price", 0, 1).getBody()).size(), 1);
