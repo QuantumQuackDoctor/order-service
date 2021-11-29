@@ -148,6 +148,10 @@ public class OrderService {
         orderEntity.setChargeId(chargeId);
         orderEntity = orderRepo.save(orderEntity);
         log.info("Order created, id: " + orderEntity.getId());
+
+        if (orderEntity.getUser().getSettings().getNotifications().getEmailOrder()){
+            sendOrderConfirmation(orderEntity.getId(), orderEntity.getUser().getId());
+        }
         return ResponseEntity.ok(new CreateResponse().type(CreateResponse.TypeEnum.STRIPE)
                 .id(String.valueOf(orderEntity.getId())).setAddress(orderEntity.getAddress()));
     }
